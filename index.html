@@ -1,0 +1,3489 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LoomApp</title>
+<style id="LOOM_CSS">
+
+:root{
+  --bg:#0b0f14;
+  --panel:#111827;
+  --text:#f8fbff;
+  --muted:#99a7bf;
+  --br:#1f2a44;
+  --acc:#60a5fa;
+
+  --ok:#22c55e;
+  --warn:#f59e0b;
+  --err:#ef4444;
+
+  --focus:#60a5fa80;
+  --top-bg:linear-gradient(180deg,#0d1220,#0a0f1c);
+  --item-bg:#0f172a;
+
+  --btn-bg:#18233a;
+  --btn-text:#f8fbff;
+  --btn-br:#223156;
+  --btn-bg-hover:#1c2a49;
+  --btn-bg-active:#1a2744;
+
+  --btn-pr-bg:#60a5fa;
+  --btn-pr-text:#0a0f1a;
+  --btn-pr-br:#7fb5ff;
+  --btn-pr-hover:#73b2ff;
+  --btn-pr-active:#5aa1ee;
+
+  --btn-d-bg:#1f1320;
+  --btn-d-text:#ffdfe4;
+  --btn-d-br:#3a1d29;
+  --btn-d-hover:#2a0f15;
+  --btn-d-active:#3a151c;
+
+  --tab-active-bg:#0a1228;
+  --tab-active-br:#203061;
+
+  --code-bg:#09122a;
+  --code-br:#14224a;
+  --code-fg:#dbeafe;
+
+  --menu-hover-bg:#0d1b3f;
+
+  --left:320px;
+  --topH:52px;
+  --sbH:48px;
+
+  /* Stable row metrics for modules list (left panel) */
+  --modRow:48px;  /* uniform row height */
+  --modGap:6px;   /* vertical gap between rows */
+}
+
+/* Global */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Helvetica,Arial;
+  overflow-y:auto;
+}
+a{color:var(--acc);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* Top bar (rendered by UI.Topbar) */
+.top{
+  position:sticky;top:0;z-index:20;
+  display:flex;flex-wrap:wrap;row-gap:6px;gap:8px;align-items:center;
+  padding:10px 14px;min-height:var(--topH);
+  border-bottom:1px solid var(--br);
+  background:var(--top-bg)
+}
+.brand{font-weight:700;font-size:16px;color:var(--acc)}
+.muted{color:var(--muted);font-size:12px}
+.sp{flex:1}
+.top .btn{min-height:36px}
+@media (max-width:760px){
+  .top .btn{padding:6px 8px;font-size:12px}
+}
+
+/* Buttons */
+.btn{
+  background:var(--btn-bg);
+  color:var(--btn-text);
+  border:1px solid var(--btn-br);
+  padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px
+}
+.btn:hover{background:var(--btn-bg-hover)}
+.btn:active{background:var(--btn-bg-active);color:var(--btn-text)}
+.btn[disabled],.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn.p{background:var(--btn-pr-bg);color:var(--btn-pr-text);border-color:var(--btn-pr-br)}
+.btn.p:hover{background:var(--btn-pr-hover)}
+.btn.p:active{background:var(--btn-pr-active);color:var(--btn-pr-text)}
+.btn.danger{background:var(--btn-d-bg);color:var(--btn-d-text);border-color:var(--btn-d-br)}
+.btn.danger:hover{background:var(--btn-d-hover)}
+.btn.danger:active{background:var(--btn-d-active);color:var(--btn-d-text)}
+
+/* Layout */
+.grid{display:grid;grid-template-columns:var(--left) 1fr;gap:12px;padding:12px;height:calc(100vh - var(--topH) - var(--sbH) - 24px);overflow:hidden}
+.panel{background:var(--panel);border:1px solid var(--br);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;height:100%}
+.panel>header{
+  display:flex;gap:8px;align-items:center;justify-content:space-between;
+  padding:10px 12px;border-bottom:1px solid var(--br);
+  position:sticky;top:0;background:var(--panel);z-index:2
+}
+.body{padding:12px}
+.panel .body{flex:1 1 auto;overflow:auto;max-height:none}
+
+/* Editor right panel: scroll only inside code */
+.panel:not(.sidebar) > .body{display:flex;flex-direction:column;overflow:hidden}
+.panel:not(.sidebar) > .body .code{flex:1 1 auto;overflow:auto}
+.panel:not(.sidebar) > .body .ta{flex:1 1 auto;height:auto}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;margin:8px 10px 0}
+.tab{padding:8px 12px;border:1px solid var(--br);border-radius:8px;color:var(--muted);cursor:pointer;user-select:none;background:transparent}
+.tab.a{color:var(--text);background:var(--tab-active-bg);border-color:var(--tab-active-br)}
+
+/* Lists and items */
+.list{display:flex;flex-direction:column;gap:6px}
+.item{
+  position:relative;
+  display:flex;gap:8px;align-items:center;justify-content:space-between;
+  padding:10px 12px;border:1px solid var(--br);border-radius:10px;background:var(--item-bg);
+  cursor:pointer;min-height:48px
+}
+.item:hover{filter:brightness(1.05)}
+.item.a{outline:none;box-shadow:inset 0 0 0 2px var(--acc)}
+.item .title{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Stable left panel rows */
+.panel.sidebar .v-slice{gap:var(--modGap)!important}
+.panel.sidebar .item{
+  height:var(--modRow);
+  min-height:var(--modRow);
+  overflow:hidden;
+}
+
+/* Key-value */
+.kv{display:grid;grid-template-columns:160px 1fr;gap:8px;margin:6px 0;align-items:center}
+
+/* Code/textarea */
+.code{
+  background:var(--code-bg);
+  border:1px solid var(--code-br);
+  border-radius:10px;padding:10px;white-space:pre;overflow:auto;
+  font:12px/1.45 ui-monospace,Consolas,Menlo,monospace;color:var(--code-fg)
+}
+.ta{width:100%;height:320px}
+
+/* Rows and inputs */
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.input,select{
+  background:var(--btn-bg);
+  color:var(--text);
+  border:1px solid var(--br);border-radius:8px;padding:8px 10px
+}
+.input::placeholder{color:var(--muted)}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.err{color:var(--err)}
+.detail{margin-top:12px;padding:10px;border:1px solid var(--br);border-radius:10px;background:var(--item-bg)}
+.badge{display:inline-block;padding:2px 6px;border:1px solid var(--btn-br);border-radius:6px;color:var(--muted);font-size:12px}
+.note{color:var(--muted);font-size:12px;margin-top:6px}
+.lbl{color:var(--muted)}
+
+/* Status bar */
+.statusbar{padding:8px 12px;border-top:1px solid var(--br);color:var(--muted);display:flex;gap:8px;align-items:center;justify-content:space-between}
+
+/* App area */
+.show-app #loom-root{display:none}
+#app-root{margin:12px;display:none}
+.show-app #app-root{display:block}
+
+/* Chips (filters) */
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{border:1px solid var(--btn-br);border-radius:999px;padding:6px 10px;cursor:pointer;color:var(--muted);background:transparent}
+.chip.a{background:var(--btn-pr-bg);color:var(--btn-pr-text);border-color:var(--btn-pr-br)}
+.chip:active{filter:brightness(1.05)}
+.chip:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* Item menu placeholder */
+.item .mwrap{position:relative}
+.menu{
+  position:absolute;right:0;top:36px;background:var(--panel);border:1px solid var(--br);
+  border-radius:8px;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.3);z-index:5;display:none
+}
+.menu.a{display:block}
+.menu .mi{padding:8px 10px;cursor:pointer;color:var(--text)}
+.menu .mi:hover{background:var(--menu-hover-bg)}
+.menu .mi.danger{color:var(--btn-d-text)}
+
+/* Portal menu */
+.portal-menu{position:fixed;z-index:3000;display:inline-block;box-sizing:border-box;width:220px}
+.portal-menu .mi{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Left panel fit and footer */
+.grid .panel.sidebar{height:100%}
+.grid .panel.sidebar > .body{flex:1 1 auto;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable both-edges}
+.left-footer{flex:0 0 auto;border-top:1px solid var(--br);padding:10px 12px;background:var(--panel)}
+.v-slice{display:flex;flex-direction:column;gap:14px}
+
+/* Command palette tweaks */
+.cp .hdr input{
+  background:var(--btn-bg)!important;border:1px solid var(--br)!important;color:var(--text)!important
+}
+
+/* Toasts bottom center & wider */
+.loom-toasts{position:fixed;top:auto;right:auto;left:50%;bottom:16px;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:10px;align-items:center}
+.loom-toast{background:var(--panel);border:1px solid var(--br);border-left:4px solid var(--acc);border-radius:10px;padding:10px 12px;box-shadow:0 6px 18px rgba(0,0,0,.3);color:var(--text);width:min(640px,calc(100vw - 32px))}
+.loom-toast.success{border-left-color:var(--ok)}
+.loom-toast.warn{border-left-color:var(--warn)}
+.loom-toast.error{border-left-color:var(--err)}
+
+/* Mobile off-canvas sidebar */
+@media (max-width:980px){
+  .grid{grid-template-columns:1fr}
+  .grid .panel.sidebar{height:auto !important}
+  .panel.sidebar{position:fixed;left:0;top:var(--topH);bottom:0;width:min(88vw,360px);transform:translateX(-110%);transition:transform .2s ease;z-index:30}
+  body.show-sidebar .panel.sidebar{transform:translateX(0)}
+  .panel.sidebar > header{position:sticky;top:0;z-index:2}
+  .panel.sidebar > .body{height:calc(100vh - var(--topH) - 52px);overflow:auto;padding-bottom:72px}
+  .left-footer{position:sticky;bottom:0;background:var(--panel)}
+  .sidebar-backdrop{display:none}
+  body.show-sidebar .sidebar-backdrop{display:block;position:fixed;left:0;right:0;top:var(--topH);bottom:0;background:rgba(0,0,0,.5);z-index:25}
+}
+
+/* Topbar actions: spacing and stable layout */
+.top .top-actions{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.top .top-actions .btn{margin:0}
+
+/* Left panel module list: clearer selection and proper hover per theme */
+body[data-theme=light] .panel.sidebar .item.a{box-shadow:inset 0 0 0 2px var(--text)}
+body[data-theme=dark] .panel.sidebar .item.a{box-shadow:inset 0 0 0 2px var(--acc)}
+body[data-theme=dark] .panel.sidebar .item:hover{filter:brightness(1.08)}
+body[data-theme=light] .panel.sidebar .item:hover{filter:brightness(0.96)}
+
+/* Greyscale selection/hover: dark=lighten, light=darken (high contrast) */
+body[data-theme=dark]  .list .item:hover, body[data-theme=dark]  .panel.sidebar .item:hover{filter:none;background:linear-gradient(0deg, rgba(255,255,255,0.10), rgba(255,255,255,0.10)), var(--item-bg)}
+body[data-theme=light] .list .item:hover, body[data-theme=light] .panel.sidebar .item:hover{filter:none;background:linear-gradient(0deg, rgba(0,0,0,0.08), rgba(0,0,0,0.08)), var(--item-bg)}
+body[data-theme=dark]  .list .item.a,     body[data-theme=dark]  .panel.sidebar .item.a{box-shadow:inset 0 0 0 2px #dfe5ee}
+body[data-theme=light] .list .item.a,     body[data-theme=light]  .panel.sidebar .item.a{box-shadow:inset 0 0 0 2px var(--text)}
+
+/* tabs active */
+body[data-theme=dark]  .tab.a{background:linear-gradient(0deg, rgba(255,255,255,0.06), rgba(255,255,255,0.06)), var(--tab-active-bg)}
+body[data-theme=light] .tab.a{background:linear-gradient(0deg, rgba(0,0,0,0.05), rgba(0,0,0,0.05)), var(--tab-active-bg)}
+
+/* Light theme: inputs/buttons */
+body[data-theme=light] .input, body[data-theme=light] select{background:var(--btn-bg);color:var(--text);border:1px solid var(--btn-br)}
+body[data-theme=light] .btn:hover{background:var(--btn-bg-hover)}
+body[data-theme=light] .btn:active{background:var(--btn-bg-active)}
+body[data-theme=light] :focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* Ensure primary buttons override generic hover/active per theme */
+body[data-theme=light] .btn.p:hover{background:var(--btn-pr-hover);color:var(--btn-pr-text)}
+body[data-theme=light] .btn.p:active{background:var(--btn-pr-active);color:var(--btn-pr-text)}
+body[data-theme=dark] .btn.p:hover{background:var(--btn-pr-hover);color:var(--btn-pr-text)}
+body[data-theme=dark] .btn.p:active{background:var(--btn-pr-active);color:var(--btn-pr-text)}
+
+</style>
+</head>
+<body>
+<div id="loom-root"></div>
+<script type="application/json" id="LOOM_META">
+{"name":"LoomApp","version":"2.10.9","createdAt":"2025-09-02T00:00:00.000Z","updatedAt":"2026-05-29T10:48:50.759Z","description":"Single-file, self-rebuilding, LLM-friendly framework with IDE/app profiles.","protected":{"bootloaderId":"LOOM_BOOT","bootloaderVersion":"2.5.0","runProfile":"ide","entryApp":""},"conventions":{"moduleTypes":["core","build","ui","app"],"loadOrder":["core","build","ui","app"],"naming":"Namespace.Name"}}
+</script>
+<script type="application/json" id="LOOM_GUIDE">
+{"rules":["Правки — только в капсулах (manifest/contract/code).","Бутлоадер меняется только в релизах (bump bootloaderVersion).","Версия приложения и версия загрузчика — разные.","Сначала меняй manifest/contract, затем code. Повышай версии.","Экспорты функций перечислены в manifest.exports.","Без заглушек и многоточий.","Топбар рендерится модулем UI.Topbar (капсула).","Не делай сайд-эффектов в фабриках модулей; используй ctx в экспортируемых функциях.","При больших объёмах рендера используй chunk>0 (Core.Render.schedule).","<title> == meta.name (Serializer обеспечит).","Профили сборки: ide (IDE внутри) и app (чистый рантайм под выбранный App). Профиль фиксируется в meta.protected.runProfile, entryApp — в meta.protected.entryApp.","Build.Serializer.build(options) собирает профильную страницу; Bootloader уважает профиль и запускает app в режиме app.","Health предупреждает, если ctx.require(\"X\") не указан в manifest.dependsOn (для чистых сборок требуется корректная декларация зависимостей)."],"flows":{"add":["создай капсулу","manifest","contract","code","Health","Rebuild"],"patch":["повышай версию","обнови contract при изменении API","правь code","Health"],"export":["Export JSON"],"build":["Rebuild → конфиг • Профиль: IDE/App • Entry App для профиля App • Build & Download"]}}
+</script>
+<!-- =================== MODULE CAPSULES =================== -->
+<!-- LOOM:BEGIN_MODULE name="Core.Logger" -->
+<script type="application/json" data-role="manifest">
+{"name":"Core.Logger","type":"core","version":"2.10.0","dependsOn":[],"exports":["setLevel","setLimit","clear","getHistory","debug","log","info","warn","error"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"setLevel":{"args":[{"type":"string","enum":["debug","info","warn","error"]}],"returns":{"type":"void"}},"setLimit":{"args":[{"type":"number"}],"returns":{"type":"void"}},"clear":{"args":[],"returns":{"type":"void"}},"getHistory":{"args":[],"returns":{"type":"array"}},"debug":{"args":[{"type":"string"},{"type":"any","optional":true}],"returns":{"type":"void"}},"log":{"args":[{"type":"string"},{"type":"string"},{"type":"any","optional":true}],"returns":{"type":"void"}},"info":{"args":[{"type":"string"},{"type":"any","optional":true}],"returns":{"type":"void"}},"warn":{"args":[{"type":"string"},{"type":"any","optional":true}],"returns":{"type":"void"}},"error":{"args":[{"type":"string"},{"type":"any","optional":true}],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  var LVL=["debug","info","warn","error"]; var cur="debug"; var hist=[]; var LIMIT=1000;
+  function emit(l,m,d){
+    var e={ts:new Date().toISOString(),level:l,msg:m,data:d}; hist.push(e);
+    if (hist.length>LIMIT){ hist.splice(0, hist.length - LIMIT); }
+    var methodName=(l==="debug"?"log":l), fn=console[methodName]||console.log;
+    fn("["+e.ts+"] [Loom]["+l.toUpperCase()+"]", m, (typeof d==="undefined"?"":d));
+    if (ctx.bus && ctx.bus.emit) ctx.bus.emit("log", e);
+  }
+  function ok(l){ return LVL.indexOf(l)>=LVL.indexOf(cur); }
+  return {
+    setLevel:function(l){ if(LVL.indexOf(l)>=0) cur=l; },
+    setLimit:function(n){ var v=Number(n); if(!isNaN(v) && v>=0){ LIMIT=Math.floor(v); if(hist.length>LIMIT){ hist.splice(0, hist.length - LIMIT); } } },
+    clear:function(){ hist.length=0; },
+    getHistory:function(){ return hist.slice(); },
+    debug:function(m,d){ if(ok("debug")) emit("debug",m,d); },
+    log:function(l,m,d){ if(LVL.indexOf(l)>=0 && ok(l)) emit(l,m,d); },
+    info:function(m,d){ if(ok("info")) emit("info",m,d); },
+    warn:function(m,d){ if(ok("warn")) emit("warn",m,d); },
+    error:function(m,d){ emit("error",m,d); }
+  };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="Core.Bus" -->
+<script type="application/json" data-role="manifest">
+{"name":"Core.Bus","type":"core","version":"2.10.0","dependsOn":[],"exports":["on","off","emit"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"on":{"args":[{"type":"string"},{"type":"function"}],"returns":{"type":"void"}},"off":{"args":[{"type":"string"},{"type":"function"}],"returns":{"type":"void"}},"emit":{"args":[{"type":"string"},{"type":"any","optional":true}],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  var m=new Map();
+  return {
+    on:function(e,f){ if(!m.has(e)) m.set(e,new Set()); m.get(e).add(f); },
+    off:function(e,f){ var s=m.get(e); if(s){ s.delete(f); if(s.size===0) m.delete(e); } },
+    emit:function(e,p){ var s=m.get(e)||[]; for(var it of s){ try{ it(p); }catch(err){ console.error(err); } } }
+  };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="Core.Store" -->
+<script type="application/json" data-role="manifest">
+{"name":"Core.Store","type":"core","version":"2.10.0","dependsOn":[],"exports":["get","set","remove","keys","snapshot","clear"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"get":{"args":[{"type":"string"},{"type":"any","optional":true}],"returns":{"type":"any"}},"set":{"args":[{"type":"string"},{"type":"any"}],"returns":{"type":"any"}},"remove":{"args":[{"type":"string"}],"returns":{"type":"void"}},"keys":{"args":[],"returns":{"type":"array","items":{"type":"string"}}},"snapshot":{"args":[],"returns":{"type":"object"}},"clear":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  var app = (ctx && ctx.meta && ctx.meta.name) ? (String(ctx.meta.name).toLowerCase().replace(/\s+/g,'-')) : "loomapp";
+  var mem=new Map(),p="loom:"+app+":";
+  (function prefill(){
+    try{
+      for(var i=0;i<localStorage.length;i++){
+        var k=localStorage.key(i);
+        if(k && k.indexOf(p)===0){
+          var short=k.slice(p.length);
+          try{ var v=JSON.parse(localStorage.getItem(k)); mem.set(short,v); }catch(_){}
+        }
+      }
+    }catch(_){}
+  })();
+  function load(k){ try{ var r=localStorage.getItem(p+k); return r?JSON.parse(r):undefined; }catch(e){ return undefined; } }
+  function save(k,v){ try{ localStorage.setItem(p+k,JSON.stringify(v)); }catch(e){} }
+
+  try{
+    window.addEventListener("storage", function(ev){
+      try{
+        if(!ev || !ev.key || ev.key.indexOf(p)!==0) return;
+        var short = ev.key.slice(p.length);
+        var val = typeof ev.newValue==="string" ? JSON.parse(ev.newValue) : undefined;
+        if (typeof val === "undefined"){ mem.delete(short); if(ctx.bus&&ctx.bus.emit) ctx.bus.emit("store:remove",{k:short,external:true}); }
+        else { mem.set(short,val); if(ctx.bus&&ctx.bus.emit) ctx.bus.emit("store:set",{k:short,v:val,external:true}); }
+      }catch(_){}
+    });
+  }catch(_){}
+
+  return {
+    get:function(k,def){ if(mem.has(k)) return mem.get(k); var v=load(k); if(typeof v!=="undefined"){ mem.set(k,v); return v; } return def; },
+    set:function(k,v){ mem.set(k,v); save(k,v); if(ctx.bus&&ctx.bus.emit) ctx.bus.emit("store:set",{k:k,v:v}); return v; },
+    remove:function(k){ mem.delete(k); try{localStorage.removeItem(p+k);}catch(e){} if(ctx.bus&&ctx.bus.emit) ctx.bus.emit("store:remove",{k:k}); },
+    keys:function(){ return Array.from(mem.keys()); },
+    snapshot:function(){ return Object.fromEntries(mem.entries()); },
+    clear:function(){
+      try{
+        var del=[]; for(var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if(k && k.indexOf(p)===0) del.push(k); }
+        del.forEach(function(k){ try{ localStorage.removeItem(k); }catch(_){ } });
+      }catch(_){}
+      mem.clear();
+      if(ctx.bus&&ctx.bus.emit) ctx.bus.emit("store:clear",{});
+    }
+  };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="Core.Render" -->
+<script type="application/json" data-role="manifest">
+{"name":"Core.Render","type":"core","version":"2.10.0","dependsOn":[],"exports":["schedule","renderList","clear","updateFraction"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"schedule":{"args":[{"type":"number"},{"type":"number"},{"type":"function"},{"type":"function"}],"returns":{"type":"void"}},"renderList":{"args":[{"type":"any"},{"type":"array"},{"type":"any"},{"type":"object","optional":true}],"returns":{"type":"promise"}},"clear":{"args":[{"type":"any"}],"returns":{"type":"void"}},"updateFraction":{"args":[{"type":"any"},{"type":"number"},{"type":"function"}],"returns":{"type":"promise"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  "use strict";
+
+  function schedule(total, chunk, each, done){
+    var N = Math.max(0, total|0);
+    var C = Math.max(0, chunk|0);
+    if (!C){ for (var i=0;i<N;i++) each(i); done(); return; }
+    var i2=0;
+    function step(){
+      var n=0;
+      while(i2<N && n<C){ each(i2++); n++; }
+      if (i2<N){
+        if (typeof window!=="undefined" && window.requestIdleCallback) window.requestIdleCallback(step);
+        else setTimeout(step,0);
+      } else { done(); }
+    }
+    if (typeof window!=="undefined" && window.requestIdleCallback) window.requestIdleCallback(step);
+    else setTimeout(step,0);
+  }
+
+  function ensureEl(target){
+    if (target && target.nodeType) return target;
+    if (typeof target==="string"){
+      var el=document.querySelector(target); if (el) return el;
+    }
+    return document.getElementById("app-root") || document.body;
+  }
+
+  function defaultBuilder(template){
+    return function build(item, idx){
+      var el=document.createElement("div");
+      el.className="item"; el.setAttribute("data-key", String(item && item.id || idx));
+      if (template==="simple"){
+        var t=document.createElement("span"); t.className="lbl"; t.textContent=String(item);
+        el.appendChild(t);
+      } else if (template==="medium"){
+        var title=document.createElement("div"); title.className="title"; title.textContent=String(item && item.label || item);
+        var meta=document.createElement("div"); meta.className="muted"; meta.textContent="idx="+idx;
+        el.appendChild(title); el.appendChild(meta);
+      } else {
+        var title2=document.createElement("div"); title2.className="title"; title2.textContent=String(item && item.label || item);
+        var row=document.createElement("div"); row.className="row";
+        var b=document.createElement("span"); b.className="badge"; b.textContent="i:"+idx;
+        row.appendChild(b); el.appendChild(title2); el.appendChild(row);
+      }
+      return el;
+    };
+  }
+
+  function renderList(target, data, tplOrBuilder, opts){
+    var parent=ensureEl(target);
+    var container=parent;
+    if (opts && opts.containerSelector){
+      var found=parent.querySelector(opts.containerSelector);
+      if (found) container=found;
+    }
+    container.textContent="";
+
+    var builder = (typeof tplOrBuilder==="function") ? tplOrBuilder : defaultBuilder(String(tplOrBuilder||"simple"));
+    var chunk = opts && typeof opts.chunk==="number" ? (opts.chunk|0) : 0;
+
+    var frag=document.createDocumentFragment();
+    var t0=(typeof performance!=="undefined" && performance.now)?performance.now():Date.now();
+
+    return new Promise(function(resolve){
+      schedule(data.length, chunk, function(i){
+        frag.appendChild(builder(data[i], i));
+      }, function(){
+        container.appendChild(frag);
+        var t1=(typeof performance!=="undefined" && performance.now)?performance.now():Date.now();
+        resolve({ ms: Math.round(t1 - t0), count: data.length|0 });
+      });
+    });
+  }
+
+  function clear(target){ ensureEl(target).textContent=""; }
+
+  function updateFraction(target, fraction, updater){
+    var el=ensureEl(target);
+    var nodes=el.children;
+    var n=nodes.length|0;
+
+    var fnum = Number(fraction);
+    var hasValid = Number.isFinite(fnum) && fnum >= 0 && fnum <= 1;
+    var f = hasValid ? fnum : 0.1;
+
+    var k=Math.min(n, Math.max(0, Math.floor(n * f)));
+    var idxs=new Set();
+    while(idxs.size<k){ idxs.add(Math.floor(Math.random()*n)); }
+
+    var t0=(typeof performance!=="undefined" && performance.now)?performance.now():Date.now();
+    var updated=0;
+    idxs.forEach(function(i){
+      var node=nodes[i]; if(!node) return;
+      try{ updater(node, i); updated++; }catch(_){}
+    });
+    var t1=(typeof performance!=="undefined" && performance.now)?performance.now():Date.now();
+    return Promise.resolve({ ms: Math.round(t1 - t0), updated:updated, total:n });
+  }
+
+  return { schedule:schedule, renderList:renderList, clear:clear, updateFraction:updateFraction };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="Build.Serializer" -->
+<script type="application/json" data-role="manifest">
+{"name":"Build.Serializer","type":"build","version":"2.10.1","dependsOn":[],"exports":["extract","generate","download","exportJSON","build"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"extract":{"args":[],"returns":{"type":"object"}},"generate":{"args":[{"type":"object"}],"returns":{"type":"string"}},"download":{"args":[{"type":"string","optional":true},{"type":"string"}],"returns":{"type":"void"}},"exportJSON":{"args":[],"returns":{"type":"void"}},"build":{"args":[{"type":"object"}],"returns":{"type":"string"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+ function Module(ctx){ function q(sel){ return document.querySelector(sel); } function escScript(s){ var pattern = "<" + "/" + "script>"; var replacement = "<" + "\\/" + "script>"; return String(s||"").replace(new RegExp(pattern,"gi"), replacement); } function nextByRole(start, role){ var el = start.nextElementSibling; while (el) { if (el.tagName === "SCRIPT" && el.getAttribute("data-role") === role) return el; el = el.nextElementSibling; } return null; } function extract(){ var metaEl=q("#LOOM_META"), guideEl=q("#LOOM_GUIDE"), cssEl=q("#LOOM_CSS"), bootEl=q("#LOOM_BOOT"); var meta = JSON.parse(metaEl.textContent || "{}"); var guide = JSON.parse(guideEl.textContent || "{}"); var css = cssEl ? cssEl.textContent : ""; var title = document.title || (meta && meta.name) || "LoomApp"; var boot = bootEl ? bootEl.textContent : ""; var manifests = Array.prototype.slice.call( document.querySelectorAll('script[type="application/json"][data-role="manifest"]') ); var modules = manifests.map(function(man){ var manifest = JSON.parse(man.textContent || "{}"); var con = nextByRole(man, "contract"); var code = nextByRole(man, "code"); return { manifest: manifest, contract: con ? JSON.parse(con.textContent || "{}") : {}, code: code ? code.textContent : "function Module(ctx){ return {}; }" }; }); return { meta: meta, guide: guide, css: css, title: title, modules: modules, boot: boot }; } function wrapTag(openTag, content){ var m = /^<\s*([a-zA-Z0-9-]+)/.exec(openTag); var close = m ? ("</" + m[1] + ">") : ""; return openTag + "\n" + content + "\n" + close; } function generate(src){ var meta = (function(m){ m = m || {}; m.updatedAt = new Date().toISOString(); return m; })(JSON.parse(JSON.stringify(src.meta||{}))); var bootEl = document.getElementById("LOOM_BOOT"); var bootVersion = (meta && meta.protected && meta.protected.bootloaderVersion) || (bootEl && bootEl.getAttribute("data-version")) || "2.5.0"; var modulesHtml = src.modules.map(function(m){ var code = (m.code||"").replace(/^(\s*\n)+/g,"").replace(/\s+$/,""); return [ '<!-- LOOM:BEGIN_MODULE name="'+m.manifest.name+'" -->', wrapTag('<script type="application/json" data-role="manifest">', JSON.stringify(m.manifest)), wrapTag('<script type="application/json" data-role="contract">', JSON.stringify(m.contract)), wrapTag('<script type="text/loom-module" data-role="code">', escScript(code)), '<!-- LOOM:END_MODULE -->' ].join('\n'); }).join('\n'); var pageTitle = meta && meta.name ? meta.name : (src.title || "Loom"); var html = [ "<!doctype html>", '<html lang="ru">', "<head>", '<meta charset="utf-8">', '<meta name="viewport" content="width=device-width, initial-scale=1">', "<title>"+ pageTitle +"</title>", wrapTag('<style id="LOOM_CSS">', String(src.css||"").replace(/\n{3,}/g,"\n\n").replace(/[ \t]+\n/g,"\n")), "</head>", "<body>", '<div id="loom-root"></div>', wrapTag('<script type="application/json" id="LOOM_META">', JSON.stringify(meta)), wrapTag('<script type="application/json" id="LOOM_GUIDE">', JSON.stringify(src.guide||{})), "<!-- =================== MODULE CAPSULES =================== -->", modulesHtml, "<!-- LOOM:BEGIN_BOOTLOADER -->", wrapTag('<script id="LOOM_BOOT" data-version="'+ bootVersion +'">', escScript(src.boot||"")), "<!-- LOOM:END_BOOTLOADER -->", "</body>", "</html>" ].join('\n'); return html; } function download(name, html){ var blob = new Blob([html], {type:"text/html"}); var fname = name || ("loom-"+Date.now()+".html"); function fallback(){ var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = fname; document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove(); if (ctx.log && ctx.log.info) ctx.log.info("Downloaded", fname); } if (window.showSaveFilePicker) { (async function(){ try { var h = await showSaveFilePicker({ suggestedName: fname, types: [{ description: "HTML", accept: {"text/html": [".html"]}}] }); var w = await h.createWritable(); await w.write(blob); await w.close(); if (ctx.log && ctx.log.info) ctx.log.info("Saved via FSA"); } catch (e) { if (ctx.log && ctx.log.warn) ctx.log.warn("FSA fallback", String(e)); fallback(); } })(); } else { fallback(); } } function exportJSON(){ var src = extract(); var payload = { meta: src.meta, guide: src.guide, css: src.css, title: (src.meta && src.meta.name) || src.title, modules: src.modules, bootloaderVersion: (q("#LOOM_BOOT") && q("#LOOM_BOOT").getAttribute("data-version")) || "2.5.0" }; var j = JSON.stringify(payload, null, 2); var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([j], {type:"application/json"})); a.download = "loom-"+Date.now()+".json"; document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove(); } function build(opts){ opts = opts || {}; var src = extract(); var profile = opts.profile==="app" ? "app" : "ide"; if (profile !== "app"){ var ideMeta = JSON.parse(JSON.stringify(src.meta||{})); ideMeta.protected = ideMeta.protected || {}; ideMeta.protected.runProfile = "ide"; src.meta = ideMeta; return generate(src); } var entry = String(opts.entryApp||"").trim(); if (!entry) throw new Error("entryApp required for app profile"); var includeHost = (opts.includeHost!==false); var keepHelpers = Array.isArray(opts.keepHelpers) ? opts.keepHelpers.slice() : []; var map = Object.create(null); for (var i=0;i<src.modules.length;i++){ map[src.modules[i].manifest.name] = src.modules[i]; } function has(n){ return !!map[n]; } function depsOf(n){ var m = map[n]; if(!m) return []; return Array.isArray(m.manifest && m.manifest.dependsOn) ? m.manifest.dependsOn.slice() : []; } var start = [entry]; if (includeHost && has("App.Host")) start.push("App.Host"); keepHelpers.forEach(function(h){ if(has(h)) start.push(h); }); var keep = new Set(); var q = start.slice(); while(q.length){ var n = q.shift(); if (!has(n) || keep.has(n)) continue; keep.add(n); var deps = depsOf(n); for (var j=0;j<deps.length;j++){ if(has(deps[j]) && !keep.has(deps[j])) q.push(deps[j]); } } var filtered = src.modules.filter(function(m){ return keep.has(m.manifest.name); }); var meta = JSON.parse(JSON.stringify(src.meta||{})); meta.updatedAt = new Date().toISOString(); meta.protected = meta.protected || {}; meta.protected.runProfile = "app"; meta.protected.entryApp = entry; var prod = { meta: meta, guide: src.guide, css: src.css, title: src.title, modules: filtered, boot: src.boot }; return generate(prod); } return { extract: extract, generate: generate, download: download, exportJSON: exportJSON, build: build }; }
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="Build.Health" -->
+<script type="application/json" data-role="manifest">
+{"name":"Build.Health","type":"build","version":"2.10.9","dependsOn":[],"exports":["run","preflight"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"run":{"args":[],"returns":{"type":"array"}},"preflight":{"args":[],"returns":{"type":"array"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+function findLiteralRequires(code){
+  var out = new Set();
+  try{
+    var s = String(code || "");
+    // Удаляем строки и комментарии, сохраняя структуру (чтобы не сбились индексы)
+    var res = "";
+    var i=0, len=s.length, mode=0, esc=false; // 0=code,1=',2=",3=` ,4=//,5=/*
+    while(i<len){
+      var ch=s.charAt(i), nx=s.charAt(i+1);
+      if (mode===0){
+        if (ch==="'"){ mode=1; res+=ch; i++; continue; }
+        if (ch==='"'){ mode=2; res+=ch; i++; continue; }
+        if (ch==='`'){ mode=3; res+=ch; i++; continue; }
+        if (ch==='/' && nx==='/'){ mode=4; res+='  '; i+=2; continue; }
+        if (ch==='/' && nx==='*'){ mode=5; res+='  '; i+=2; continue; }
+        res+=ch; i++; continue;
+      }
+      if (mode===1){ // '
+        if (esc){ esc=false; res+=' '; i++; continue; }
+        if (ch==='\\'){ esc=true; res+=' '; i++; continue; }
+        res += (ch==='\n' ? '\n' : ' ');
+        if (ch==="'"){ mode=0; }
+        i++; continue;
+      }
+      if (mode===2){ // "
+        if (esc){ esc=false; res+=' '; i++; continue; }
+        if (ch==='\\'){ esc=true; res+=' '; i++; continue; }
+        res += (ch==='\n' ? '\n' : ' ');
+        if (ch==='"'){ mode=0; }
+        i++; continue;
+      }
+      if (mode===3){ // `
+        if (esc){ esc=false; res+=' '; i++; continue; }
+        if (ch==='\\'){ esc=true; res+=' '; i++; continue; }
+        res += (ch==='\n' ? '\n' : ' ');
+        if (ch==='`'){ mode=0; }
+        i++; continue;
+      }
+      if (mode===4){ // //
+        res += (ch==='\n' ? '\n' : ' ');
+        if (ch==='\n'){ mode=0; }
+        i++; continue;
+      }
+      if (mode===5){ // /*
+        res += (ch==='\n' ? '\n' : ' ');
+        if (ch==='*' && nx=== '/'){ res+=' '; i+=2; mode=0; continue; }
+        i++; continue;
+      }
+    }
+
+    // Ищем ctx.require('X') в очищенном коде
+    var re = /ctx\.require\s*\x28\s*(['"])([^'"]+)\1\s*\x29/g, m;
+    while ((m = re.exec(res))){
+      var name = (m[2]||"").trim();
+      if (/^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)+$/.test(name)) out.add(name);
+    }
+  }catch(_){}
+  return Array.from(out);
+}
+  function preflight(){
+    var out=[];
+    try{
+      var list = ctx.modules.list();
+      for (var i=0;i<list.length;i++){
+        var name=list[i].name;
+        var def = ctx.modules.getDef(name);
+        if(!def) continue;
+        var reqs = findLiteralRequires(def.code||"");
+        var deps = (def.manifest && Array.isArray(def.manifest.dependsOn)) ? def.manifest.dependsOn.slice() : [];
+        var missing = reqs.filter(function(r){ return r!==name && deps.indexOf(r)<0; });
+        out.push({ name: name, requires: reqs, depends: deps, missing: missing, ok: missing.length===0 });
+      }
+    }catch(_){}
+    return out;
+  }
+  function run(){
+    var R=[];
+    var must=["Core.Logger","Core.Bus","Core.Store","Build.Serializer","UI.Topbar","UI.Shell","UI.Actions","App.Host"];
+    var bootId = (ctx.meta && ctx.meta.protected && ctx.meta.protected.bootloaderId) || "LOOM_BOOT";
+    var bootEl = document.getElementById(bootId);
+    var appVer = ctx.meta && ctx.meta.version;
+    var bootAttrVer = bootEl && bootEl.getAttribute("data-version");
+    var bootMetaVer = ctx.meta && ctx.meta.protected && ctx.meta.protected.bootloaderVersion;
+
+    R.push({name:"Bootloader present", ok: !!bootEl});
+    R.push({name:"App version", ok: !!appVer, msg: String(appVer||"n/a")});
+    if (bootAttrVer || bootMetaVer){
+      var msg = String(bootAttrVer||"n/a")+" (attr) / "+String(bootMetaVer||"n/a")+" (meta)";
+      var ok = true; var warn=false;
+      var ma = String(bootAttrVer||"0").split(".")[0], mm = String(bootMetaVer||"0").split(".")[0];
+      if (ma && mm && ma !== mm){ ok=false; warn=true; }
+      R.push({name:"Bootloader version", ok: ok, warn: warn, msg: msg});
+    }
+
+    for (var i=0;i<must.length;i++){
+      var m=must[i];
+      R.push({name:"Module def "+m, ok: (ctx.modules && ctx.modules.exists && ctx.modules.exists(m))});
+    }
+
+    var list = ctx.modules.list();
+    var names = {};
+    var dups = [];
+    for (var j=0;j<list.length;j++){
+      var nm = list[j].name;
+      if (names[nm]) dups.push(nm);
+      names[nm]=1;
+    }
+    R.push({name:"Unique names", ok: dups.length===0, msg: dups.length?dups.join(","):"OK"});
+
+    for (var j=0;j<list.length;j++){
+      var d = list[j];
+      var name = d.name;
+
+      var compiled=false, expObj={}, exp=[], need=[], deps=[], depsOk=false;
+      try{
+        need = (d.manifest && d.manifest.exports) || [];
+        deps = (d.manifest && d.manifest.dependsOn) || [];
+        var req = ctx.require(name);
+        compiled = !!req;
+        expObj = req || {};
+        exp = Object.keys(expObj);
+        depsOk = deps.every(function(n){ return ctx.modules && ctx.modules.exists && ctx.modules.exists(n); });
+      }catch(_){ compiled=false; }
+
+      R.push({name:"Compiled "+name, ok: compiled});
+      var goodExp = need.every(function(x){ return exp.indexOf(x)>=0; });
+      R.push({name:"Exports "+name, ok: goodExp, msg: exp.join(",")});
+      R.push({name:"Depends " + name, ok: depsOk, msg: deps.join(",")});
+    }
+
+    try{
+      var t = document.title || "";
+      var mn = (ctx.meta && ctx.meta.name) || "";
+      var okT = (t === mn);
+      R.push({name:"Title equals meta.name", ok: okT, warn: !okT, msg: okT ? "OK" : (t+" vs "+mn)});
+    }catch(_){}
+
+    try{
+      var pf = preflight();
+      var missMods = pf.filter(function(r){ return r.missing && r.missing.length; })
+                       .map(function(r){ return r.name + "->[" + r.missing.join(",") + "]"; });
+      R.push({name:"Literal requires declared", ok: missMods.length===0, warn: missMods.length>0, msg: missMods.length?missMods.join("; "):"OK"});
+    }catch(_){}
+
+    return R;
+  }
+  return { run: run, preflight: preflight };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="Build.Import" -->
+<script type="application/json" data-role="manifest">
+{"name":"Build.Import","type":"build","version":"2.10.0","dependsOn":["UI.Modal","Core.Logger","UI.Toast"],"exports":["open"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"open":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  function applyMeta(meta){
+    try{
+      var el=document.getElementById("LOOM_META");
+      if(el){ el.textContent = JSON.stringify(meta); }
+      var keys=Object.keys(ctx.meta); for(var i=0;i<keys.length;i++){ delete ctx.meta[keys[i]]; }
+      Object.assign(ctx.meta, meta||{});
+      document.title = meta && meta.name ? meta.name : document.title;
+      try{ if(ctx.bus && ctx.bus.emit) ctx.bus.emit("meta:changed", ctx.meta); }catch(_){}
+    }catch(e){ if(ctx.log&&ctx.log.warn) ctx.log.warn("Meta import issue", String(e)); }
+  }
+  function applyGuide(guide){
+    try{ var el=document.getElementById("LOOM_GUIDE"); if(el) el.textContent = JSON.stringify(guide||{}); }catch(e){}
+  }
+  function applyCss(css){
+    try{ var el=document.getElementById("LOOM_CSS"); if(el) el.textContent = css; }catch(e){}
+  }
+  function open(){
+    var modal=ctx.require("UI.Modal"); if(!modal){ alert("Modal not ready"); return; }
+    var body=document.createElement("div");
+    var note=document.createElement("div"); note.className="note";
+    note.textContent="Импорт JSON: существующие модули будут обновлены, новые — добавлены.";
+    var fi=document.createElement("input"); fi.type="file"; fi.accept="application/json"; fi.className="input";
+    body.appendChild(note); body.appendChild(document.createElement("br")); body.appendChild(fi);
+    modal.open({
+      title:"Import JSON",
+      body:body,
+      buttons:[
+        { text:"Отмена", onClick:function(){ modal.close(); } },
+        { text:"Импортировать", primary:true, onClick:function(){
+            if(!fi.files || !fi.files[0]){ alert("Выберите файл"); return; }
+            var f=fi.files[0]; var r=new FileReader();
+            r.onload=function(){
+              try{
+                var data=JSON.parse(String(r.result||"{}"));
+                if (data && data.meta){
+                  try{
+                    var boot = document.getElementById("LOOM_BOOT");
+                    var bootVer = boot && boot.getAttribute("data-version");
+                    data.meta.protected = data.meta.protected || {};
+                    if (!data.meta.protected.bootloaderVersion && bootVer) data.meta.protected.bootloaderVersion = bootVer;
+                  }catch(_){}
+                  applyMeta(data.meta);
+                }
+                if(data && typeof data.css==="string") applyCss(data.css);
+                if(data && data.guide) applyGuide(data.guide);
+
+                if(data && Array.isArray(data.modules)){
+                  for(var i=0;i<data.modules.length;i++){
+                    var mod=data.modules[i];
+                    if(!mod || !mod.manifest || !mod.manifest.name) continue;
+                    if(ctx.modules.exists(mod.manifest.name)){
+                      ctx.modules.setDef(mod.manifest.name, mod);
+                    } else {
+                      ctx.modules.add(mod);
+                    }
+                  }
+                }
+                var toast=ctx.require("UI.Toast"); if(toast&&toast.success) toast.success("Импорт завершен");
+                modal.close();
+              }catch(e){ alert("Ошибка импорта: "+e.message); }
+            };
+            r.readAsText(f);
+          } }
+      ]
+    });
+  }
+  return { open: open };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.Modal" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.Modal","type":"ui","version":"2.10.0","dependsOn":[],"exports":["open","close"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"open":{"args":[{"type":"object"}],"returns":{"type":"void"}},"close":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  var m,content,styled=false,lastFocus=null;
+  function ensureStyle(){
+    if(styled) return; styled=true;
+    var st=document.createElement("style");
+    st.textContent=
+      ".loom-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:1000}"+
+      ".loom-modal .content{background:var(--panel);border:1px solid var(--br);border-radius:12px;max-width:96vw;width:min(840px,96vw);padding:16px;height:min(80vh,720px);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 30px rgba(0,0,0,.5)}"+
+      ".loom-modal .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}"+
+      ".loom-modal .title{font-weight:600;font-size:16px}"+
+      ".loom-modal .x{background:none;border:1px solid var(--btn-br);border-radius:8px;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 8px}"+
+      ".loom-modal .x:hover{background:var(--btn-bg-hover)}"+
+      ".loom-modal .body{flex:1 1 auto;overflow:auto}"+
+      ".loom-modal .ftr{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}";
+    document.head.appendChild(st);
+  }
+  function ensure(){
+    ensureStyle();
+    if(m) return;
+    m=document.createElement("div"); m.className="loom-modal"; m.setAttribute("role","dialog"); m.setAttribute("aria-modal","true");
+    content=document.createElement("div"); content.className="content";
+    m.appendChild(content); document.body.appendChild(m);
+    m.addEventListener("click",function(e){ if(e.target===m) close(); });
+    document.addEventListener("keydown", function(e){ if(m && m.style.display==="flex" && e.key==="Escape"){ close(); } });
+  }
+  function trapFocus(){
+    try{
+      var focusables = content.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (focusables && focusables.length>0) focusables[0].focus();
+    }catch(_){}
+  }
+  function open(opts){
+    ensure(); content.innerHTML="";
+    lastFocus = document.activeElement || null;
+    var hdr=document.createElement("div"); hdr.className="hdr";
+    var ttl=document.createElement("div"); ttl.className="title"; ttl.textContent=(opts&&opts.title)||"";
+    var x=document.createElement("button"); x.className="x"; x.textContent="×"; x.setAttribute("aria-label","Close"); x.onclick=close;
+    hdr.appendChild(ttl); hdr.appendChild(x);
+    var body=document.createElement("div"); body.className="body";
+    if(opts && opts.body){ if (opts.body.nodeType) body.appendChild(opts.body); else body.textContent=String(opts.body); }
+    var ftr=document.createElement("div"); ftr.className="ftr";
+    var buttons=(opts&&opts.buttons)||[{text:"OK"}];
+    buttons.forEach(function(b){
+      var btn=document.createElement("button"); btn.className="btn"+(b.primary?" p":"")+(b.danger?" danger":""); btn.textContent=b.text||"OK";
+      if(b.disabled) btn.setAttribute("disabled","disabled");
+      btn.onclick=function(){ if(b.onClick) b.onClick(); };
+      ftr.appendChild(btn);
+    });
+    content.appendChild(hdr); content.appendChild(body); content.appendChild(ftr);
+    m.style.display="flex";
+    setTimeout(trapFocus, 0);
+  }
+  function close(){
+    if(m) m.style.display="none";
+    try{ if(lastFocus && lastFocus.focus) lastFocus.focus(); }catch(_){}
+  }
+  return { open: open, close: close };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.Toast" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.Toast","type":"ui","version":"2.10.0","dependsOn":["Core.Bus"],"exports":["show","success","error","warn","info","mount"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"show":{"args":[{"type":"string"},{"type":"string"},{"type":"number","optional":true}],"returns":{"type":"void"}},"success":{"args":[{"type":"string"},{"type":"number","optional":true}],"returns":{"type":"void"}},"error":{"args":[{"type":"string"},{"type":"number","optional":true}],"returns":{"type":"void"}},"warn":{"args":[{"type":"string"},{"type":"number","optional":true}],"returns":{"type":"void"}},"info":{"args":[{"type":"string"},{"type":"number","optional":true}],"returns":{"type":"void"}},"mount":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  var box, LIMIT=5;
+  function ensure(){ if(box) return; box=document.createElement("div"); box.className="loom-toasts"; document.body.appendChild(box); }
+  function show(type, text, ms){
+    ensure();
+    var t=document.createElement("div"); t.className="loom-toast"+(type?(" "+type):""); t.textContent=String(text||"");
+    box.appendChild(t);
+    while(box.childElementCount > LIMIT){ try{ box.firstElementChild.remove(); }catch(_){ break; } }
+    setTimeout(function(){ try{ t.remove(); }catch(_){} }, ms||4000);
+  }
+  function mount(){
+    ensure();
+    if(ctx.bus && ctx.bus.on){
+      ctx.bus.on("log", function(e){
+        if(!e) return;
+        if(e.level==="error") show("error", e.msg);
+        else if(e.level==="warn") show("warn", e.msg);
+      });
+    }
+  }
+  return { show:show, success:function(t,m){show("success",t,m);}, error:function(t,m){show("error",t,m);}, warn:function(t,m){show("warn",t,m);}, info:function(t,m){show("",t,m);}, mount:mount };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.HealthModal" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.HealthModal","type":"ui","version":"2.10.0","dependsOn":["Build.Health","UI.Modal"],"exports":["open"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"open":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  function tr(key, fb){
+    try{ var i18n = ctx.require("Core.I18n"); return (i18n && i18n.t) ? i18n.t(key, null, fb) : fb; }catch(_){ return fb; }
+  }
+  function row(r){
+    var wrap=document.createElement("div"); wrap.style.cssText="display:flex;align-items:center;gap:10px;margin:6px 0";
+    var dot=document.createElement("div"); dot.style.cssText="width:10px;height:10px;border-radius:50%";
+    dot.style.background=r.ok?(r.warn?"#f59e0b":"#22c55e"):"#ef4444";
+    var name=document.createElement("div"); name.style.color="var(--muted)"; name.textContent=r.name;
+    var msg=document.createElement("div");
+    var txt = r.ok ? (r.warn ? (r.msg||"WARN") : "OK") : (r.msg||"Issue");
+    msg.textContent=txt;
+    wrap.appendChild(dot); wrap.appendChild(name); wrap.appendChild(msg);
+    return wrap;
+  }
+  function open(){
+    var res=(ctx.health && ctx.health.run)?ctx.health.run():[];
+    var body=document.createElement("div");
+    res.forEach(function(r){ body.appendChild(row(r)); });
+    var modal=ctx.require("UI.Modal");
+    if(modal) modal.open({title: tr("ui.topbar.health","Health"), body:body, buttons:[{text: tr("ui.blueprint.btn.close","Close"), onClick:function(){ modal.close(); }}]});
+  }
+  return { open: open };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.NewModule" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.NewModule","type":"ui","version":"2.10.0","dependsOn":["UI.Modal"],"exports":["open"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"open":{"args":[{"type":"object","optional":true}],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  function open(opts){
+    var modal=ctx.require("UI.Modal"); if(!modal){ alert("Modal not ready"); return; }
+    var body=document.createElement("div");
+    function row(label, input){ var w=document.createElement("div"); w.style.marginBottom="10px"; var l=document.createElement("div"); l.style.color="var(--muted)"; l.style.marginBottom="4px"; l.textContent=label; w.appendChild(l); w.appendChild(input); return w; }
+    var name=document.createElement("input"); name.className="input"; name.placeholder="App.MyModule";
+    var type=document.createElement("select"); type.className="input"; ["core","build","ui","app"].forEach(function(t){ var o=document.createElement("option"); o.value=t; o.textContent=t; if(t==="app") o.selected=true; type.appendChild(o); });
+    var ver=document.createElement("input"); ver.className="input"; ver.value="1.0.0";
+    body.appendChild(row("Имя модуля", name));
+    body.appendChild(row("Тип", type));
+    body.appendChild(row("Версия", ver));
+    function valid(n){ return /^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)+$/.test(n||""); }
+    modal.open({
+      title:"Новый модуль",
+      body: body,
+      buttons: [
+        { text:"Отмена", onClick:function(){ modal.close(); } },
+        { text:"Создать", primary:true, onClick:function(){
+            var nm=name.value.trim(); if(!valid(nm)){ alert("Имя должно быть в формате Namespace.Name"); return; }
+            if(ctx.modules.exists(nm)){ alert("Модуль с таким именем уже существует"); return; }
+            var def={
+              manifest:{name:nm,type:type.value,version:ver.value.trim()||"1.0.0",dependsOn:[],exports:["init"]},
+              contract:{"$schema":"loom.contract/1","functions":{"init":{"args":[],"returns":{"type":"void"}}}},
+              code:"function Module(ctx){ return { init: function(){ if(ctx.log&&ctx.log.info) ctx.log.info('Init "+nm+"'); } }; }"
+            };
+            ctx.modules.add(def);
+            if(opts && typeof opts.onCreate==="function") opts.onCreate(nm);
+            modal.close();
+          } }
+      ]
+    });
+  }
+  return { open: open };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.Kit" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.Kit","type":"ui","version":"2.10.0","dependsOn":[],"exports":["mount"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"mount":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  return { mount:function(){} };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.Theme" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.Theme","type":"ui","version":"2.10.0","dependsOn":["Core.Store"],"exports":["mount","toggle","set","get","applyTokens"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"mount":{"args":[],"returns":{"type":"void"}},"toggle":{"args":[],"returns":{"type":"void"}},"set":{"args":[{"type":"string","enum":["dark","light"]}],"returns":{"type":"void"}},"get":{"args":[],"returns":{"type":"string"}},"applyTokens":{"args":[{"type":"object"}],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  var key="ui:theme", el=null, mounted=false, cur="dark";
+  var tokens = {
+    dark: {
+      "--bg":"#121416","--panel":"#1b1f26","--text":"#ffffff","--muted":"#a0a4ab","--br":"#2d3138","--acc":"#2563eb",
+      "--top-bg":"linear-gradient(180deg,#14161b,#0f1319)","--item-bg":"#20252e",
+      "--btn-bg":"#2a2e36","--btn-text":"#ffffff","--btn-br":"#3a3f48","--btn-bg-hover":"#323744","--btn-bg-active":"#272c38",
+      "--btn-pr-bg":"#2563eb","--btn-pr-text":"#ffffff","--btn-pr-br":"#3b82f6","--btn-pr-hover":"#1d4ed8","--btn-pr-active":"#1e40af",
+      "--btn-d-bg":"#311018","--btn-d-text":"#ffdfe4","--btn-d-br":"#3a1d29","--btn-d-hover":"#2a0f15","--btn-d-active":"#3a151c",
+      "--focus":"#9ca3af80",
+      "--tab-active-bg":"#232832","--tab-active-br":"#343a46",
+      "--code-bg":"#0f1217","--code-br":"#1f2430","--code-fg":"#e8ecf3",
+      "--menu-hover-bg":"#2a3038"
+    },
+    light: {
+      "--bg":"#f7f9fb","--panel":"#ffffff","--text":"#0b1020","--muted":"#5b6374","--br":"#d7dfea","--acc":"#2563eb",
+      "--top-bg":"linear-gradient(180deg,#f2f4f9,#e9eef6)","--item-bg":"#fafbfe",
+      "--btn-bg":"#f3f6fb","--btn-text":"#0b1020","--btn-br":"#d7dfea","--btn-bg-hover":"#e9eef6","--btn-bg-active":"#e3e9f3",
+      "--btn-pr-bg":"#2563eb","--btn-pr-text":"#ffffff","--btn-pr-br":"#3b82f6","--btn-pr-hover":"#1d4ed8","--btn-pr-active":"#1e40af",
+      "--btn-d-bg":"#ffe8ea","--btn-d-text":"#7a1020","--btn-d-br":"#ffd0d6","--btn-d-hover":"#ffdfe4","--btn-d-active":"#ffd3d9",
+      "--focus":"#9aa5b580",
+      "--tab-active-bg":"#eceff5","--tab-active-br":"#d5dbe6",
+      "--code-bg":"#f2f4f8","--code-br":"#dbe2ec","--code-fg":"#121212",
+      "--menu-hover-bg":"#edf1f6"
+    }
+  };
+  function cssFrom(map){
+    return ":root{"+Object.keys(map).map(function(k){ return k+":"+map[k]+";"; }).join("")+"}";
+  }
+  function applyTokens(map){
+    if(!el){ el=document.createElement("style"); document.head.appendChild(el); }
+    el.textContent = cssFrom(map);
+  }
+  function set(theme){
+    cur = (theme==="light")?"light":"dark";
+    document.body.setAttribute("data-theme", cur);
+    applyTokens(tokens[cur]);
+    try{ if(ctx.store) ctx.store.set(key, cur); }catch(_){}
+    try{ if(ctx.bus && ctx.bus.emit) ctx.bus.emit("ui:theme:changed",{theme:cur}); }catch(_){}
+  }
+  function get(){ return cur; }
+  function toggle(){ set(cur==="dark"?"light":"dark"); }
+  function mount(){
+    if(mounted) return; mounted=true;
+    try{ var v = ctx.store && ctx.store.get ? ctx.store.get(key) : null; if(v) cur=v; }catch(_){}
+    set(cur);
+  }
+  return { mount: mount, toggle: toggle, set: set, get: get, applyTokens: applyTokens };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.CommandPalette" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.CommandPalette","type":"ui","version":"2.10.0","dependsOn":[],"exports":["mount","open","register","unregister","clear","setCommands"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"mount":{"args":[],"returns":{"type":"void"}},"open":{"args":[{"type":"array","optional":true}],"returns":{"type":"void"}},"register":{"args":[{"type":"object"}],"returns":{"type":"void"}},"unregister":{"args":[{"type":"string"}],"returns":{"type":"void"}},"clear":{"args":[],"returns":{"type":"void"}},"setCommands":{"args":[{"type":"array"}],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  var host, input, list, styled=false;
+  var reg = new Map();
+
+  function tr(key, fb){
+    try{ var i18n = ctx.require("Core.I18n"); return (i18n && i18n.t) ? i18n.t(key, null, fb) : fb; }catch(_){ return fb; }
+  }
+
+  function style(){
+    if (styled) return; styled=true;
+    var s=document.createElement("style");
+    s.textContent=".cp-wrap{position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;background:rgba(0,0,0,.5);z-index:1100;padding-top:10vh}"+
+      ".cp{width:min(720px,90vw);background:var(--panel);border:1px solid var(--br);border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.5)}"+
+      ".cp .hdr{padding:10px;border-bottom:1px solid var(--br)}"+
+      ".cp .hdr input{width:100%;background:var(--btn-bg);color:var(--text);border:1px solid var(--btn-br);border-radius:8px;padding:10px;font-size:14px}"+
+      ".cp .lst{max-height:50vh;overflow:auto}"+
+      ".cp .it{display:flex;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--br);cursor:pointer}"+
+      ".cp .it:hover,.cp .it.a{background:var(--menu-hover-bg)}"+
+      ".cp .it .title{flex:1}"+
+      ".cp .it .group{color:var(--muted);font-size:12px}";
+    document.head.appendChild(s);
+  }
+  function mount(){
+    style();
+    if (host) return;
+    host=document.createElement("div"); host.className="cp-wrap"; host.setAttribute("role","dialog"); host.setAttribute("aria-modal","true");
+    var cp=document.createElement("div"); cp.className="cp";
+    var hdr=document.createElement("div"); hdr.className="hdr";
+    input=document.createElement("input"); input.type="text"; input.placeholder=tr("ui.palette.placeholder","Type a command…");
+    hdr.appendChild(input);
+    var lst=document.createElement("div"); lst.className="lst"; list=lst;
+    cp.appendChild(hdr); cp.appendChild(lst); host.appendChild(cp); document.body.appendChild(host);
+    host.addEventListener("click", function(e){ if(e.target===host) close(); });
+    document.addEventListener("keydown", function(e){
+      if(host.style.display==="flex"){
+        if(e.key==="Escape"){ e.preventDefault(); close(); }
+        else if(e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); moveSel(e.key==="ArrowDown"?1:-1); }
+        else if(e.key==="Enter"){ e.preventDefault(); runSel(); }
+      }
+    });
+    input.addEventListener("input", render);
+  }
+  function close(){ if (host) host.style.display="none"; }
+  function normalize(str){ return String(str||"").toLowerCase(); }
+  function currentCommands(){ return Array.from(reg.values()); }
+  var sel=0, cur=[];
+  function render(){
+    var q=normalize(input.value);
+    var cmds = currentCommands().filter(function(c){
+      return !q || normalize(c.title).indexOf(q)>=0 || normalize(c.id).indexOf(q)>=0;
+    });
+    cur = cmds.slice(0,100);
+    list.innerHTML="";
+    sel = Math.min(sel, Math.max(0, cur.length-1));
+    cur.forEach(function(c,i){
+      var it=document.createElement("div"); it.className="it"+(i===sel?" a":"");
+      var t=document.createElement("div"); t.className="title"; t.textContent=c.title;
+      var g=document.createElement("div"); g.className="group"; g.textContent=c.group||"";
+      it.appendChild(t); it.appendChild(g);
+      it.addEventListener("click", function(){ try{ if(c.action) c.action(); }finally{ close(); } });
+      list.appendChild(it);
+    });
+  }
+  function moveSel(d){ if(!cur.length) return; sel=(sel+d+cur.length)%cur.length; render(); }
+  function runSel(){ if(!cur.length) return; try{ var c=cur[sel]; if(c && c.action) c.action(); }finally{ close(); } }
+  function open(commands){
+    mount();
+    if (Array.isArray(commands)){ setCommands(commands); }
+    host.style.display="flex";
+    input.value=""; sel=0; render();
+    setTimeout(function(){ input.focus(); }, 0);
+  }
+  function register(cmd){ if(!cmd || !cmd.id) return; reg.set(cmd.id, cmd); }
+  function unregister(id){ reg.delete(id); }
+  function clear(){ reg.clear(); }
+  function setCommands(arr){ clear(); (arr||[]).forEach(register); }
+  return { mount: mount, open: open, register: register, unregister: unregister, clear: clear, setCommands: setCommands };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.Layout" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.Layout","type":"ui","version":"2.10.0","dependsOn":[],"exports":["mount","toggleSidebar","closeSidebar"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"mount":{"args":[],"returns":{"type":"void"}},"toggleSidebar":{"args":[],"returns":{"type":"void"}},"closeSidebar":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  var backdrop;
+  function ensureBackdrop(){
+    if (backdrop) return;
+    backdrop = document.createElement("div");
+    backdrop.className = "sidebar-backdrop";
+    document.body.appendChild(backdrop);
+    backdrop.addEventListener("click", closeSidebar);
+  }
+  function toggleSidebar(){
+    ensureBackdrop();
+    document.body.classList.toggle("show-sidebar");
+    setTimeout(function(){
+      if (ctx.bus && ctx.bus.emit) ctx.bus.emit("ui:sidebar:toggled",{open:document.body.classList.contains("show-sidebar")});
+    }, 60);
+  }
+  function closeSidebar(){
+    ensureBackdrop();
+    document.body.classList.remove("show-sidebar");
+  }
+  function mount(){
+    ensureBackdrop();
+    window.addEventListener("resize", function(){
+      if (window.innerWidth > 980) closeSidebar();
+    });
+  }
+  return { mount: mount, toggleSidebar: toggleSidebar, closeSidebar: closeSidebar };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.Shell" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.Shell","type":"ui","version":"2.10.1","dependsOn":["Core.I18n","Build.Serializer","UI.Toast","UI.NewModule"],"exports":["mount","saveCurrent"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"mount":{"args":[],"returns":{"type":"void"}},"saveCurrent":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  "use strict";
+
+  // i18n helper
+  var __i18n = null;
+  function tr(key, fb){
+    try{
+      __i18n = __i18n || ctx.require("Core.I18n");
+      return (__i18n && __i18n.t) ? __i18n.t(key, null, fb) : fb;
+    }catch(_){ return fb; }
+  }
+
+  // DOM helper
+  function h(t,p,c){ var e=document.createElement(t); p=p||{}; c=c||[];
+    for (var k in p){ var v=p[k];
+      if (k==="class") e.className=v;
+      else if (k==="text") e.textContent=v;
+      else if (k==="style") e.setAttribute("style", v);
+      else if (k==="disabled"){ if(v) e.setAttribute("disabled","disabled"); else e.removeAttribute("disabled"); }
+      else if (k.indexOf("on")===0 && typeof v==="function") e.addEventListener(k.slice(2), v);
+      else e.setAttribute(k, v);
+    }
+    for (var i=0;i<c.length;i++){ var x=c[i]; if (x==null) continue; e.append(x && x.nodeType ? x : document.createTextNode(x)); }
+    return e;
+  }
+  function escapeHTML(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+  var S={
+    sel:null, mode:"view", part:"code",
+    refs:{}, bound:false, status:"Ready", dirty:false, invalid:false,
+    types:{core:true,build:true,ui:true,app:true},
+    v:{start:0, end:0, total:0, list:[]},
+    useVirt:false, overscan:6, threshold:600,
+    menuPortal:null, menuUnbind:null, menuAnchor:null
+  };
+
+  function rowMetrics(){
+    try{
+      var root = document.documentElement;
+      var rs = getComputedStyle(root);
+      var row = parseFloat(rs.getPropertyValue('--modRow')) || 48;
+      var gap = 0;
+      try{
+        var vs = S.refs && S.refs.vSlice ? getComputedStyle(S.refs.vSlice) : null;
+        gap = vs ? parseFloat(vs.rowGap||'0') : 0;
+      }catch(_){}
+      if (!gap){ var gvar = parseFloat(rs.getPropertyValue('--modGap')) || 6; gap = gvar; }
+      return { step: row + gap, row: row, gap: gap };
+    }catch(_){ return { step: 54, row:48, gap:6 }; }
+  }
+
+  // Локализованный статус
+  function setStatus(s){
+    S.status = s;
+    var el = S.refs.status; if (!el) return;
+    var key = (s==="Ready") ? "ui.shell.status.ready"
+            : (s==="Editing…") ? "ui.shell.status.editing"
+            : (s==="Saved") ? "ui.shell.status.saved" : "";
+    el.textContent = key ? tr(key, s) : s;
+  }
+
+  function confirmIfDirty(){
+    if(!S.dirty) return true;
+    var ok=confirm(tr("ui.shell.confirm.leave","Есть несохранённые изменения. Продолжить без сохранения?"));
+    if(ok){ S.dirty=false; setStatus("Ready"); }
+    return ok;
+  }
+
+  function typeChipRow(){
+    var row=h("div",{class:"chips"},[]);
+    ["core","build","ui","app"].forEach(function(t){
+      var chip=h("div",{class:"chip"+(S.types[t]?" a":""),text:t,onclick:function(){
+        S.types[t]=!S.types[t]; chip.className="chip"+(S.types[t]?" a":""); vRefresh(true);
+      }},[]);
+      row.appendChild(chip);
+    });
+    return row;
+  }
+
+  function filtered(){
+    var list = ctx.modules.list().slice();
+    list = list.filter(function(it){ return !!S.types[it.type]; });
+    list.sort(function(a,b){ return (a.name||"").localeCompare(b.name||""); });
+    return list;
+  }
+
+  function vBuildList(){ S.v.list = filtered(); S.v.total = S.v.list.length; S.useVirt = S.v.total > (S.threshold || 600); }
+  function vViewportCount(){
+    var body=S.refs.leftBody; if(!body) return 20;
+    var avail = body.clientHeight; var m = rowMetrics();
+    var base = Math.ceil(avail / m.step) + (S.overscan || 6);
+    return Math.max(20, base||20);
+  }
+
+  function closePortalMenu(){
+    if (S.menuPortal){ try{ S.menuPortal.remove(); }catch(_){ } S.menuPortal=null; }
+    if (S.menuUnbind){ try{ S.menuUnbind(); }catch(_){ } S.menuUnbind=null; }
+    S.menuAnchor=null;
+  }
+
+  function openPortalMenu(anchor, dd){
+    if (S.menuPortal && S.menuAnchor===anchor){ closePortalMenu(); return; }
+    closePortalMenu();
+    S.menuAnchor = anchor;
+    var r = anchor.getBoundingClientRect();
+    var m = document.createElement("div");
+    m.className = "menu portal-menu a"; m.setAttribute("role","menu");
+    var left = Math.max(8, Math.min(window.innerWidth - 220, r.left));
+    m.style.left = left + "px"; m.style.top = (r.bottom + 6) + "px";
+    function mi(t, fn, danger){
+      var d=document.createElement("div"); d.className="mi"+(danger?" danger":""); d.textContent=t;
+      d.setAttribute("role","menuitem"); d.setAttribute("tabindex","-1");
+      d.addEventListener("click", function(e){ e.stopPropagation(); try{ fn(); } finally { closePortalMenu(); } });
+      return d;
+    }
+    m.appendChild(mi(tr("ui.shell.mi.open","Open"), function(){
+      if(!confirmIfDirty()) return;
+      S.sel=dd.name; S.mode="view"; S.invalid=false; S.dirty=false; setStatus("Ready"); updateLeftFooter(); render();
+    }));
+    m.appendChild(mi(tr("ui.shell.mi.duplicate","Duplicate"), function(){ dupName(dd.name); }));
+    m.appendChild(mi(tr("ui.shell.mi.delete","Delete"), function(){ delName(dd.name); }, true));
+    document.body.appendChild(m);
+
+    var onDoc = function(ev){ if (!m.contains(ev.target) && ev.target!==anchor) closePortalMenu(); };
+    var onScroll = function(){ closePortalMenu(); };
+    var onResize = function(){ closePortalMenu(); };
+    var onKey = function(e){ if(e.key==="Escape"){ e.preventDefault(); closePortalMenu(); } };
+    setTimeout(function(){
+      document.addEventListener("click", onDoc, true);
+      window.addEventListener("scroll", onScroll, true);
+      window.addEventListener("resize", onResize, true);
+      document.addEventListener("keydown", onKey, true);
+      S.menuUnbind = function(){
+        document.removeEventListener("click", onDoc, true);
+        window.removeEventListener("scroll", onScroll, true);
+        window.removeEventListener("resize", onResize, true);
+        document.removeEventListener("keydown", onKey, true);
+      };
+    }, 0);
+    S.menuPortal = m;
+  }
+
+  function vRenderSlice(){
+    var slice=S.refs.vSlice, top=S.refs.vTop, bot=S.refs.vBot, body=S.refs.leftBody;
+    if(!slice || !body) return;
+    var total=S.v.total, list=S.v.list;
+
+    if (!S.useVirt){
+      top.style.height = "0px"; bot.style.height = "0px";
+      
+      slice.innerHTML="";
+      for (var i=0;i<total;i++){
+        (function(dd){
+          var it=h("div",{class:"item"+(S.sel===dd.name?" a":""), onclick:function(e){
+              if(e.target && e.target.classList.contains("mmore")) return;
+              if(!confirmIfDirty()) return;
+              S.sel=dd.name; S.mode="view"; S.invalid=false; S.dirty=false; setStatus("Ready"); updateLeftFooter(); render();
+            }},[
+            h("div",{class:"title",text:dd.name},[]),
+            (function(){
+              var w=h("div",{class:"mwrap"},[]);
+              var btn=h("button",{class:"btn mmore",text:"\u22EF","aria-label":"More actions",title:"More"},[]);
+              btn.addEventListener("click", function(ev){ ev.stopPropagation(); openPortalMenu(btn, dd); });
+              w.appendChild(btn);
+              return w;
+            })()
+          ]);
+          slice.appendChild(it);
+        })(list[i]);
+      }
+      return;
+    }
+
+    var m = rowMetrics();
+    var step = m.step;
+    var start = Math.floor((body.scrollTop||0) / step);
+    start = Math.max(0, Math.min(total, start));
+    var count = vViewportCount();
+    var end = Math.min(total, start + count);
+
+    var over = S.overscan||6;
+    start = Math.max(0, start - over);
+    end = Math.min(total, end + over);
+
+    var oldS=S.v.start, oldE=S.v.end;
+    S.v.start = start; S.v.end = end;
+    if (start===oldS && end===oldE && slice && slice.childElementCount>0) return;
+
+    var topH = start * step;
+    var botH = Math.max(0, (total - end) * step);
+    top.style.height = topH.toFixed(2)+"px";
+    bot.style.height = botH.toFixed(2)+"px";
+
+    slice.innerHTML="";
+    for (var i=start;i<end;i++){
+      (function(dd){
+        var it=h("div",{class:"item"+(S.sel===dd.name?" a":""), onclick:function(e){
+            if(e.target && e.target.classList.contains("mmore")) return;
+            if(!confirmIfDirty()) return;
+            S.sel=dd.name; S.mode="view"; S.invalid=false; S.dirty=false; setStatus("Ready"); updateLeftFooter(); render();
+          }},[
+          h("div",{class:"title",text:dd.name},[]),
+          (function(){
+            var w=h("div",{class:"mwrap"},[]);
+            var btn=h("button",{class:"btn mmore",text:"\u22EF","aria-label":"More actions",title:"More"},[]);
+            btn.addEventListener("click", function(ev){ ev.stopPropagation(); openPortalMenu(btn, dd); });
+            w.appendChild(btn);
+            return w;
+          })()
+        ]);
+        slice.appendChild(it);
+      })(list[i]);
+    }
+  }
+
+  function vRefresh(force){
+    vBuildList();
+    var top=S.refs.vTop, bot=S.refs.vBot;
+    if (top && bot){ top.style.height="0px"; bot.style.height="0px"; }
+    if (force){ requestAnimationFrame(vRenderSlice); } else { vRenderSlice(); }
+  }
+
+  function updateLeftFooter(){
+    var f=S.refs.leftFooter; if(!f) return;
+    f.innerHTML="";
+    if(S.sel){
+      var def=ctx.modules.getDef(S.sel);
+      if(def){ f.appendChild(detailsCard(def)); return; }
+    }
+    f.appendChild(h("div",{class:"muted",text:tr("ui.shell.selectLeft","Выберите модуль слева")},[]));
+  }
+
+  function left(){
+    var p=h("div",{class:"panel sidebar"},[]);
+    var header=h("header",{},[
+      h("div",{},[ h("div",{class:"title",text:tr("ui.shell.modules","Modules")},[]) ]),
+      h("div",{},[ h("button",{class:"btn",text:tr("ui.shell.new","New"),onclick:newMod},[]) ])
+    ]);
+    p.appendChild(header);
+
+    var b=h("div",{class:"body"},[]); S.refs.leftBody = b;
+
+    b.appendChild(typeChipRow());
+
+    var vWrap=h("div",{class:"list"},[]);
+    var vTop=h("div",{},[]); vTop.style.height="0px";
+    var vSlice=h("div",{class:"v-slice"},[]);
+    var vBot=h("div",{},[]); vBot.style.height="0px";
+    vWrap.appendChild(vTop); vWrap.appendChild(vSlice); vWrap.appendChild(vBot);
+    S.refs.vWrap=vWrap; S.refs.vSlice=vSlice; S.refs.vTop=vTop; S.refs.vBot=vBot;
+
+    b.appendChild(vWrap);
+    p.appendChild(b);
+
+    var f=h("div",{class:"left-footer"},[]); S.refs.leftFooter=f;
+    updateLeftFooter();
+    p.appendChild(f);
+
+    vRefresh(true);
+    b.addEventListener("scroll", function(){ vRenderSlice(); }, {passive:true});
+    p.addEventListener("click", function(){ closePortalMenu(); });
+
+    return p;
+  }
+
+  function headerActions(){
+    var arr=[];
+    if (S.sel){
+      if (S.mode==="edit"){
+        arr.push(h("button",{class:"btn p btn-save",text:tr("ui.shell.btn.save","Save"),onclick:save,disabled:S.invalid},[]));
+        arr.push(h("button",{class:"btn",text:tr("ui.shell.btn.validate","Validate"),onclick:validate},[]));
+        arr.push(h("button",{class:"btn",text:tr("ui.shell.btn.cancel","Cancel"),onclick:function(){
+          if(!confirmIfDirty()) return; S.mode="view"; S.dirty=false; S.invalid=false; setStatus("Ready"); render();
+        }},[]));
+      }
+      arr.push(h("button",{class:"btn",text:(S.mode==="edit"? tr("ui.shell.btn.editing","Editing") : tr("ui.shell.btn.edit","Edit")),onclick:function(){
+        if(S.mode==="edit"){ if(!confirmIfDirty()) return; S.mode="view"; S.dirty=false; S.invalid=false; setStatus("Ready"); }
+        else { S.mode="edit"; setStatus("Editing…"); }
+        render();
+      }},[]));
+    }
+    return arr;
+  }
+
+  function right(){
+    var p=h("div",{class:"panel"},[]);
+    var hdr=h("header",{},[
+      h("div",{text: S.sel || tr("ui.shell.details","Details")},[]),
+      h("div",{class:"row"}, headerActions())
+    ]);
+    p.appendChild(hdr);
+    var b=h("div",{class:"body"},[]);
+    if(!S.sel){ b.appendChild(h("div",{class:"muted",text:tr("ui.shell.selectLeft","Выберите модуль слева")},[])); p.appendChild(b); return p; }
+    var def=ctx.modules.getDef(S.sel);
+    var tabs=h("div",{class:"tabs"},["manifest","contract","code"].map(function(t){
+      return h("div",{class:"tab"+(S.part===t?" a":""),text:t,onclick:function(){
+        if(S.part===t) return;
+        if(S.mode==="edit" && !confirmIfDirty()) return;
+        S.part=t; S.mode="view"; S.invalid=false; S.dirty=false; setStatus("Ready"); render();
+      }},[]);
+    }));
+    b.appendChild(tabs);
+
+    if(S.mode==="view"){
+      var pre=h("pre",{class:"code"},[]);
+      pre.textContent=S.part==="code"?def.code:JSON.stringify(def[S.part],null,2);
+      b.appendChild(pre);
+      b.appendChild(h("div",{class:"row",style:"margin-top:8px"},[
+        h("button",{class:"btn",text:tr("ui.shell.btn.validate","Validate"),onclick:validate},[]),
+        h("button",{class:"btn",text:tr("ui.shell.btn.copy","Copy"),onclick:function(){
+          try{ navigator.clipboard.writeText(pre.textContent||""); var toast=ctx.require("UI.Toast"); if(toast&&toast.success) toast.success("Скопировано"); }catch(e){ alert("Copy failed"); }
+        }},[]),
+        h("button",{class:"btn",text:tr("ui.shell.btn.viewHtml","View HTML"),onclick:viewHTML},[])
+      ]));
+    } else {
+      var ta=h("textarea",{class:"code ta"},[]);
+      ta.value = S.part==="code" ? def.code : JSON.stringify(def[S.part],null,2);
+      S.refs.ta = ta;
+      b.appendChild(ta);
+      var err=h("div",{class:"note"},[]); S.refs.err = err; b.appendChild(err);
+
+      ta.addEventListener("input", function(){
+        S.dirty=true;
+        if(S.part!=="code"){
+          try{ JSON.parse(ta.value); ta.style.borderColor="var(--code-br)"; S.invalid=false; err.textContent=""; setStatus("Editing…"); }
+          catch(e){ ta.style.borderColor="#ef4444"; S.invalid=true; err.textContent="JSON ошибка: "+e.message; setStatus("Invalid JSON"); }
+        } else {
+          setStatus("Editing…");
+        }
+        if(!S.refs.saveBtn){ try{ S.refs.saveBtn = p.querySelector(".btn-save"); }catch(_){ } }
+        if(S.refs.saveBtn){ if(S.invalid) S.refs.saveBtn.setAttribute("disabled","disabled"); else S.refs.saveBtn.removeAttribute("disabled"); }
+      });
+    }
+    p.appendChild(b);
+    return p;
+  }
+
+  function detailsCard(d){
+    var box=h("div",{class:"detail"},[]);
+    box.appendChild(h("div",{class:"kv"},[h("div",{class:"muted",text:tr("ui.shell.kv.name","Name")},[]),h("div",{text:d.manifest.name},[])]));
+    box.appendChild(h("div",{class:"kv"},[h("div",{class:"muted",text:tr("ui.shell.kv.type","Type")},[]),h("div",{text:d.manifest.type},[])]));
+    box.appendChild(h("div",{class:"kv"},[h("div",{class:"muted",text:tr("ui.shell.kv.version","Version")},[]),h("div",{text:d.manifest.version},[])]));
+    var deps=(d.manifest.dependsOn||[]).join(", ")||"—";
+    box.appendChild(h("div",{class:"kv"},[h("div",{class:"muted",text:tr("ui.shell.kv.depends","Depends")},[]),h("div",{text:deps},[])]));
+    var exps=(d.manifest.exports||[]).join(", ")||"—";
+    box.appendChild(h("div",{class:"kv"},[h("div",{class:"muted",text:tr("ui.shell.kv.exports","Exports")},[]),h("div",{text:exps},[])]));
+    return box;
+  }
+
+  function layout(){
+    closePortalMenu();
+    var root=document.getElementById("loom-root"); root.innerHTML="";
+    var grid=h("div",{class:"grid"},[]);
+    grid.appendChild(left()); grid.appendChild(right());
+    root.appendChild(grid);
+    var status=h("div",{class:"statusbar"},[
+      h("div",{text:tr("ui.shell.status.label","Status: ")},[]),
+      (S.refs.status = h("div",{class:"muted",text:S.status},[])),
+      h("div",{class:"sp"},[]),
+      h("div",{class:"muted",text:tr("ui.shell.modules","Modules")+": "+ctx.modules.list().length},[])
+    ]);
+    root.appendChild(status);
+    setStatus(S.status); // синхронизировать локализацию текущего значения статуса
+  }
+
+  function save(){
+    if(!S.sel || !S.refs.ta) return;
+    var def=ctx.modules.getDef(S.sel);
+    if(!def){ alert("Module not found: "+S.sel); return; }
+    var oldName = def.manifest && def.manifest.name;
+    try{
+      if(S.part==="code"){ def.code=S.refs.ta.value; }
+      else { def[S.part]=JSON.parse(S.refs.ta.value); }
+      var newName = def.manifest && def.manifest.name;
+      if (S.part==="manifest" && newName && oldName && newName!==oldName) {
+        if (ctx.modules.exists(newName)) { alert("Module with name '"+newName+"' already exists"); return; }
+        ctx.modules.add(def); ctx.modules.remove(oldName); S.sel = newName;
+      } else {
+        var ok = ctx.modules.setDef(oldName, def);
+        if (!ok){ alert("setDef rejected (rename not allowed). Use add+remove for renaming."); return; }
+      }
+      S.mode="view"; S.dirty=false; S.invalid=false; setStatus("Saved");
+      var toast=ctx.require("UI.Toast"); if(toast&&toast.success) toast.success("Module saved");
+      updateLeftFooter(); render();
+    }catch(e){ alert("Save error: "+e.message); }
+  }
+  function saveCurrent(){ if (S.mode==="edit" && !S.invalid) save(); }
+
+  function validate(){
+    try{
+      var d=ctx.modules.getDef(S.sel);
+      var expObj = ctx.require(S.sel) || {};
+      var exp = Object.keys(expObj);
+      var need = (d.manifest && d.manifest.exports) || [];
+      var ok = need.every(function(x){return exp.indexOf(x)>=0;});
+      var toast=ctx.require("UI.Toast");
+      if(ok){ if(toast&&toast.success) toast.success("Validate OK"); else alert("OK"); }
+      else { var msg="Mismatch: "+exp.join(","); if(toast&&toast.warn) toast.warn(msg); else alert(msg); }
+    } catch(e){ alert("Validate error: "+e.message); }
+  }
+
+  function viewHTML(){
+    var ser=ctx.require("Build.Serializer");
+    if(!ser){ alert("Serializer not ready"); return; }
+    var html=ser.generate(ser.extract());
+    var w=window.open("","_blank");
+    if(w){ w.document.write("<pre style='white-space:pre-wrap;font:12px monospace'>"+escapeHTML(html)+"</pre>"); w.document.close(); }
+    else alert("Popup blocked");
+  }
+
+  function newMod(){
+    var nmModal=ctx.require("UI.NewModule");
+    if(nmModal){
+      if(S.mode==="edit" && !confirmIfDirty()) return;
+      nmModal.open({ onCreate:function(name){ S.sel=name; S.mode="edit"; S.part="code"; S.dirty=false; S.invalid=false; setStatus("Editing…"); updateLeftFooter(); render(); } });
+      return;
+    }
+    var i=1, name="App.Module"+i; while(ctx.modules.exists(name)) { i++; name="App.Module"+i; }
+    var def={
+      manifest:{name:name,type:"app",version:"1.0.0",dependsOn:[],exports:["ping"]},
+      contract:{"$schema":"loom.contract/1","functions":{"ping":{"args":[],"returns":{"type":"string"}}}},
+      code:"function Module(ctx){ return { ping: function(){ return 'pong-'+Date.now(); } }; }"
+    };
+    ctx.modules.add(def); S.sel=name; S.mode="edit"; S.part="code"; setStatus("Editing…"); updateLeftFooter(); render();
+  }
+
+  function dupName(nm){
+    if(!nm) return;
+    if(S.mode==="edit" && !confirmIfDirty()) return;
+    var d=ctx.modules.getDef(nm); var name=d.manifest.name+"_copy"; var i=1;
+    while(ctx.modules.exists(name)){ i++; name=d.manifest.name+"_copy"+i; }
+    var def={manifest:{name:name,type:d.manifest.type,version:d.manifest.version,dependsOn:d.manifest.dependsOn||[],exports:d.manifest.exports||[]},contract:JSON.parse(JSON.stringify(d.contract||{})),code:d.code};
+    ctx.modules.add(def); S.sel=name; updateLeftFooter(); render();
+  }
+
+  function delName(nm){
+    if(!nm) return;
+    if(!confirm(tr("ui.shell.mi.delete.confirm","Delete ")+nm+"?")) return;
+    ctx.modules.remove(nm);
+    if (S.sel===nm) { S.sel=null; S.dirty=false; S.invalid=false; setStatus("Ready"); }
+    updateLeftFooter(); render();
+  }
+
+  function bindOnce(){
+    if (S.bound) return; S.bound = true;
+    if (ctx.bus && ctx.bus.on){
+      ctx.bus.on("ui:navigate", function(name){
+        try{
+          if (!name) return;
+          if(!confirmIfDirty()) return;
+          if (ctx.modules.exists(name)){ S.sel=name; S.mode="view"; S.invalid=false; S.dirty=false; setStatus("Ready"); updateLeftFooter(); render(); }
+        }catch(_){}
+      });
+      ctx.bus.on("ui:save", saveCurrent);
+      ctx.bus.on("ui:sidebar:toggled", function(){ setTimeout(function(){ vRefresh(true); }, 50); });
+      ctx.bus.on("modules:add", function(){ vRefresh(true); updateLeftFooter(); });
+      ctx.bus.on("modules:remove", function(){ vRefresh(true); updateLeftFooter(); });
+      ctx.bus.on("modules:setDef", function(){ vRefresh(true); updateLeftFooter(); });
+      ctx.bus.on("ui:theme:changed", function(){ vRefresh(true); });
+      // реакция на смену языка и обновление словарей
+      ctx.bus.on("i18n:lang", function(){ try{ render(); setStatus(S.status); }catch(_){ } });
+      ctx.bus.on("i18n:dict", function(){ try{ setStatus(S.status); }catch(_){ } });
+    }
+    document.addEventListener("keydown", function(e){
+      var isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
+      var mod = isMac ? e.metaKey : e.ctrlKey;
+      if (mod && e.key.toLowerCase()==="s"){ e.preventDefault(); saveCurrent(); }
+      else if (e.key==="Escape" && S.mode==="edit"){ if(!confirmIfDirty()) return; S.mode="view"; S.dirty=false; S.invalid=false; setStatus("Ready"); render(); }
+    });
+    window.addEventListener("beforeunload", function(e){ if(S.dirty){ e.preventDefault(); e.returnValue=""; }});
+    window.addEventListener("resize", function(){ vRefresh(true); closePortalMenu(); });
+  }
+
+  function render(){
+    bindOnce();
+    var __st=0; try{ __st=(S.refs&&S.refs.leftBody&&S.refs.leftBody.scrollTop)||0; }catch(e){ __st=0; }
+    layout();
+    try{ if(S.refs&&S.refs.leftBody){ S.refs.leftBody.scrollTop=__st; } }catch(e){}
+    try{ requestAnimationFrame(function(){ try{ if(S.refs&&S.refs.leftBody){ S.refs.leftBody.scrollTop=__st; } vRenderSlice(); }catch(e){} }); }catch(e){}
+  }
+
+  return { mount: function(){ render(); setStatus("Ready"); }, saveCurrent: function(){ if (S.mode==="edit" && !S.invalid) save(); } };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.Topbar" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.Topbar","type":"ui","version":"2.10.0","dependsOn":[],"exports":["mount","addButton","removeButton","clear","setInfo"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"mount":{"args":[],"returns":{"type":"void"}},"addButton":{"args":[{"type":"object"}],"returns":{"type":"void"}},"removeButton":{"args":[{"type":"string"}],"returns":{"type":"void"}},"clear":{"args":[],"returns":{"type":"void"}},"setInfo":{"args":[{"type":"string"}],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  var bar=null, brandEl=null, infoEl=null, spEl=null, wrapEl=null, mounted=false;
+  var map=new Map(), listening=false;
+
+  function ensure(){
+    if (mounted) return;
+    bar=document.querySelector(".top");
+    if(!bar){
+      bar=document.createElement("div");
+      bar.className="top";
+      var anchor=document.body.firstChild;
+      document.body.insertBefore(bar, anchor);
+    }
+    try{ while(bar.firstChild){ bar.removeChild(bar.firstChild);} }catch(_){}
+
+    brandEl=document.createElement("div"); brandEl.className="brand"; brandEl.textContent=(ctx && ctx.meta && ctx.meta.name) ? String(ctx.meta.name) : "Loom";
+    infoEl=document.createElement("div"); infoEl.className="muted"; infoEl.id="loom-ver";
+    spEl=document.createElement("div"); spEl.className="sp";
+    wrapEl=document.createElement("div"); wrapEl.className="top-actions";
+    bar.appendChild(brandEl); bar.appendChild(infoEl); bar.appendChild(spEl); bar.appendChild(wrapEl);
+    mounted=true;
+  }
+
+  function render(){
+    if(!mounted) return;
+    wrapEl.innerHTML="";
+    var arr=Array.from(map.values()).sort(function(a,b){ return (a.order||999) - (b.order||999); });
+    arr.forEach(function(b){ wrapEl.appendChild(b.el); });
+  }
+
+  function addButton(opts){
+    ensure();
+    if(!opts || !opts.id) return;
+    if (map.has(opts.id)){ removeButton(opts.id); }
+    var btn=document.createElement("button");
+    btn.className="btn"+(opts.primary?" p":"")+(opts.danger?" danger":"");
+    btn.textContent=String(opts.text||"");
+    if (opts.title) btn.setAttribute("title", String(opts.title));
+    if (opts.ariaLabel) btn.setAttribute("aria-label", String(opts.ariaLabel));
+    if (typeof opts.onClick==="function") btn.addEventListener("click", opts.onClick);
+    if (opts.disabled) btn.setAttribute("disabled","disabled");
+    map.set(opts.id, { id:opts.id, el:btn, order:opts.order||999 });
+    render();
+  }
+
+  function removeButton(id){
+    var it=map.get(id); if(!it) return;
+    try{ it.el.remove(); }catch(_){}
+    map.delete(id);
+    render();
+  }
+
+  function clear(){
+    map.forEach(function(it){ try{ it.el.remove(); }catch(_){} });
+    map.clear();
+    render();
+  }
+
+  function updateInfo(){
+    try{
+      var bver=(ctx.meta && ctx.meta.protected && ctx.meta.protected.bootloaderVersion)||"";
+      var prof=(ctx.meta && ctx.meta.protected && ctx.meta.protected.runProfile)||"ide";
+      infoEl.textContent = "v" + ((ctx.meta && ctx.meta.version) || "") + (bver?(" • boot "+bver):"") + (" • "+prof);
+    }catch(_){}
+  }
+
+  function mount(){
+    ensure();
+    updateInfo();
+    if (!listening && ctx.bus && ctx.bus.on){
+      listening = true;
+      ctx.bus.on("meta:changed", function(meta){
+        try{
+          brandEl.textContent = (meta && meta.name) ? String(meta.name) : "Loom";
+          updateInfo();
+        }catch(_){}
+      });
+    }
+  }
+
+  return { mount: mount, addButton:addButton, removeButton:removeButton, clear:clear, setInfo:function(text){ ensure(); infoEl.textContent=String(text||""); } };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.BuildConfig" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.BuildConfig","type":"ui","version":"2.10.0","dependsOn":["UI.Modal","Build.Serializer","Build.Health","Core.Logger","Core.I18n"],"exports":["open"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"open":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  "use strict";
+  function tr(key, fb){ try{ var i18n=ctx.require("Core.I18n"); return (i18n && i18n.t)? i18n.t(key,null,fb) : fb; }catch(_){ return fb; } }
+
+  function getApps(){
+    var out=[]; try{
+      var list=ctx.modules.list();
+      for(var i=0;i<list.length;i++){
+        var m=list[i];
+        if(m.type==="app" && m.name!=="App.Host" && m.name!=="App.Welcome") out.push(m.name);
+      }
+    }catch(_){}
+    return out.sort();
+  }
+  function computeClosure(entry, includeHost, keepHelpers){
+    var set=new Set(); var map=Object.create(null); var list=ctx.modules.list();
+    for(var i=0;i<list.length;i++){ map[list[i].name]=true; }
+    function depsOf(n){ var d=ctx.modules.getDef(n); var arr=(d && d.manifest && Array.isArray(d.manifest.dependsOn))?d.manifest.dependsOn.slice():[]; return arr; }
+    var q=[]; if(entry) q.push(entry); if(includeHost && map["App.Host"]) q.push("App.Host");
+    (keepHelpers||[]).forEach(function(h){ if(map[h]) q.push(h); });
+    while(q.length){ var n=q.shift(); if(!map[n] || set.has(n)) continue; set.add(n); var deps=depsOf(n); for(var j=0;j<deps.length;j++) if(map[deps[j]] && !set.has(deps[j])) q.push(deps[j]); }
+    return set;
+  }
+
+  function open(){
+    var modal=ctx.require("UI.Modal"); if(!modal){ alert("Modal not ready"); return; }
+    var apps=getApps();
+    var body=document.createElement("div");
+
+    var modeWrap=document.createElement("div");
+    var lbl=document.createElement("div"); lbl.className="lbl"; lbl.textContent=tr("ui.build.profile","Profile");
+    var sel=document.createElement("select"); sel.className="input";
+    [tr("ui.build.profile.ide","IDE (as-is)"), tr("ui.build.profile.app","App-only")].forEach(function(t,i){ var o=document.createElement("option"); o.value=i===0?"ide":"app"; o.textContent=t; sel.appendChild(o); });
+    modeWrap.appendChild(lbl); modeWrap.appendChild(sel);
+
+    var entryWrap=document.createElement("div");
+    var entryLbl=document.createElement("div"); entryLbl.className="lbl"; entryLbl.textContent=tr("ui.build.entry","Entry App");
+    var entry=document.createElement("select"); entry.className="input";
+    apps.forEach(function(a){ var o=document.createElement("option"); o.value=a; o.textContent=a; entry.appendChild(o); });
+    entryWrap.appendChild(entryLbl); entryWrap.appendChild(entry);
+
+    var hostWrap=document.createElement("div"); var hostLabel=document.createElement("label");
+    var host=document.createElement("input"); host.type="checkbox"; host.checked=true; hostLabel.appendChild(host);
+    hostLabel.appendChild(document.createTextNode(" "+tr("ui.build.includeHost","Include App.Host"))); hostWrap.appendChild(hostLabel);
+
+    var helpWrap=document.createElement("div");
+    var helpLbl=document.createElement("div"); helpLbl.className="lbl"; helpLbl.textContent=tr("ui.build.keepHelpers","Keep UI helpers");
+    var mChk=document.createElement("label"); var m=document.createElement("input"); m.type="checkbox"; mChk.appendChild(m); mChk.appendChild(document.createTextNode(" UI.Modal"));
+    var tChk=document.createElement("label"); var t=document.createElement("input"); t.type="checkbox"; tChk.appendChild(t); tChk.appendChild(document.createTextNode(" UI.Toast"));
+    var thChk=document.createElement("label"); var th=document.createElement("input"); th.type="checkbox"; thChk.appendChild(th); thChk.appendChild(document.createTextNode(" UI.Theme"));
+    var helpsRow=document.createElement("div"); helpsRow.className="row"; helpsRow.appendChild(mChk); helpsRow.appendChild(tChk); helpsRow.appendChild(thChk);
+    helpWrap.appendChild(helpLbl); helpWrap.appendChild(helpsRow);
+
+    var verWrap=document.createElement("div"); var verLbl=document.createElement("div"); verLbl.className="lbl"; verLbl.textContent=tr("ui.build.versions","Versions");
+    var appRow=document.createElement("div"); appRow.className="row";
+    var appLab=document.createElement("div"); appLab.className="lbl"; appLab.textContent=tr("ui.build.appVersion","App version");
+    var appVer=document.createElement("input"); appVer.className="input"; appVer.placeholder="2.10.0"; appVer.value=(ctx.meta&&ctx.meta.version)||"";
+    appRow.appendChild(appLab); appRow.appendChild(appVer);
+
+    var bootRow=document.createElement("div"); bootRow.className="row";
+    var bootLab=document.createElement("div"); bootLab.className="lbl"; bootLab.textContent=tr("ui.build.bootVersion","Bootloader version (release-only)");
+    var bootVer=document.createElement("input"); bootVer.className="input"; bootVer.placeholder="2.5.0";
+    var bootAttr=""; try{ var bootEl=document.getElementById("LOOM_BOOT"); bootAttr=bootEl && bootEl.getAttribute("data-version") || ""; }catch(_){}
+    bootVer.value=(ctx.meta && ctx.meta.protected && ctx.meta.protected.bootloaderVersion) || bootAttr || "";
+    var bootTouchLbl=document.createElement("label"); bootTouchLbl.style.marginLeft="8px";
+    var bootTouch=document.createElement("input"); bootTouch.type="checkbox"; bootTouchLbl.appendChild(bootTouch);
+    bootTouchLbl.appendChild(document.createTextNode(" "+tr("ui.build.bootTouch","Update boot attr+meta")));
+    bootRow.appendChild(bootLab); bootRow.appendChild(bootVer); bootRow.appendChild(bootTouchLbl);
+
+    verWrap.appendChild(verLbl); verWrap.appendChild(appRow); verWrap.appendChild(bootRow);
+
+    var stats=document.createElement("div"); stats.className="note"; stats.style.marginTop="8px";
+    var warn=document.createElement("div"); warn.className="note"; warn.style.marginTop="8px"; warn.style.color="var(--warn)";
+
+    function refresh(){
+      var profile=sel.value;
+      entry.disabled = (profile!=="app") || apps.length===0;
+      host.disabled = (profile!=="app");
+      m.disabled = t.disabled = th.disabled = (profile!=="app");
+      if(profile!=="app"){ stats.textContent=tr("ui.build.note.ide","IDE mode: full page will be rebuilt."); warn.textContent=""; return; }
+      var ks=[]; if(m.checked) ks.push("UI.Modal"); if(t.checked) ks.push("UI.Toast"); if(th.checked) ks.push("UI.Theme");
+      var set=computeClosure(entry.value, host.checked, ks);
+      stats.textContent="App-only build will include "+set.size+" modules.";
+      var pf=(ctx.health && ctx.health.preflight)?ctx.health.preflight():[];
+      var issues=pf.filter(function(r){ return set.has(r.name) && r.missing && r.missing.length; });
+      warn.textContent = issues.length ? tr("ui.build.preflight","Preflight issues: {list}").replace("{list}", issues.map(function(r){ return r.name+"->["+r.missing.join(",")+"]"; }).join("; ")) : "";
+      buildBtn && (buildBtn.disabled = !!issues.length);
+    }
+
+    body.appendChild(modeWrap);
+    if(apps.length){ body.appendChild(entryWrap); body.appendChild(hostWrap); body.appendChild(helpWrap); }
+    else { var noApp=document.createElement("div"); noApp.className="note"; noApp.textContent=tr("ui.build.noApp","No App.* modules for App profile."); body.appendChild(noApp); }
+    body.appendChild(verWrap);
+    body.appendChild(stats);
+    body.appendChild(warn);
+
+    var buildBtn;
+    modal.open({
+      title: tr("ui.build.title","Build configuration"),
+      body:body,
+      buttons:[
+        { text: tr("ui.build.btn.cancel","Cancel"), onClick:function(){ modal.close(); } },
+        { text: tr("ui.build.btn.build","Build & Download"), primary:true, onClick:function(){
+            try{
+              var ser=ctx.require("Build.Serializer"); if(!ser){ alert("Serializer not ready"); return; }
+              var profile=sel.value;
+              // применяем версии перед сборкой
+              try{
+                var _el=document.getElementById("LOOM_META"); var _m=_el?JSON.parse(_el.textContent||"{}"):{};
+                var _app=(appVer&&appVer.value?appVer.value.trim():(ctx.meta&&ctx.meta.version)||"");
+                var _boot=(bootVer&&bootVer.value?bootVer.value.trim():((ctx.meta&&ctx.meta.protected&&ctx.meta.protected.bootloaderVersion)||""));
+                var _touch=!!(bootTouch&&bootTouch.checked);
+                if(_app) _m.version=String(_app);
+                _m.updatedAt=new Date().toISOString();
+                _m.protected=_m.protected||{};
+                if(_boot) _m.protected.bootloaderVersion=String(_boot);
+                _el.textContent=JSON.stringify(_m);
+                var _k=Object.keys(ctx.meta); for(var _i=0;_i<_k.length;_i++){ delete ctx.meta[_k[_i]]; }
+                Object.assign(ctx.meta,_m);
+                if(_m && _m.name) document.title=_m.name;
+                if(_touch){ var _bootEl=document.getElementById("LOOM_BOOT"); if(_bootEl && _boot) _bootEl.setAttribute("data-version", String(_boot)); }
+                if(ctx.bus&&ctx.bus.emit) ctx.bus.emit("meta:changed", ctx.meta);
+              }catch(_){}
+              if(profile==="ide"){
+                var html=ser.generate(ser.extract()); ser.download(undefined, html);
+              } else {
+                var ks=[]; if(m.checked) ks.push("UI.Modal"); if(t.checked) ks.push("UI.Toast"); if(th.checked) ks.push("UI.Theme");
+                var html2=ser.build({ profile:"app", entryApp: entry.value, includeHost: host.checked, keepHelpers: ks });
+                ser.download(undefined, html2);
+              }
+              modal.close();
+            }catch(e){ alert("Build error: "+(e && e.message ? e.message : e)); }
+          } }
+      ]
+    });
+    buildBtn = document.querySelector(".loom-modal .ftr .btn.p");
+    sel.addEventListener("change", refresh);
+    entry.addEventListener("change", refresh);
+    host.addEventListener("change", refresh);
+    m.addEventListener("change", refresh);
+    t.addEventListener("change", refresh);
+    th.addEventListener("change", refresh);
+    refresh();
+  }
+  return { open: open };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.Actions" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.Actions","type":"ui","version":"2.10.6","dependsOn":["UI.Topbar","Core.I18n","UI.Layout","UI.BuildConfig","Build.Serializer","UI.Toast","UI.AppSwitcher","UI.LanguageSwitcher","UI.Blueprint","UI.CommandPalette","UI.Theme","UI.HealthModal","Build.Import","Build.Patcher","UI.NewModule","UI.Shell"],"exports":["wire"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"wire":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  "use strict";
+
+  var BTN_IDS = ["menu","cmd","theme","health","import","export","rebuild"];
+  var bound = false;
+
+  function tr(i18n, key, fb){
+    return (i18n && i18n.t) ? i18n.t(key, null, fb) : fb;
+  }
+
+  function renderTopbar(){
+    var top = ctx.require("UI.Topbar"); if (!top) return;
+    var i18n = ctx.require("Core.I18n");
+
+    try{ BTN_IDS.forEach(function(id){ top.removeButton(id); }); }catch(_){}
+
+    top.addButton({
+      id:"menu", text:"☰",
+      title: tr(i18n,"ui.topbar.sidebar","Sidebar"),
+      ariaLabel: tr(i18n,"ui.topbar.sidebar","Sidebar"),
+      order:10,
+      onClick:function(){
+        var lay = ctx.require("UI.Layout"); if (lay && lay.toggleSidebar) lay.toggleSidebar();
+      }
+    });
+
+    top.addButton({
+      id:"cmd",
+      text:(navigator.platform&&navigator.platform.toUpperCase().indexOf('MAC')>=0 ? "⌘K" : "Ctrl+K"),
+      title: tr(i18n,"ui.topbar.command","Command Palette"),
+      ariaLabel: tr(i18n,"ui.topbar.command","Command Palette"),
+      order:20,
+      onClick:function(){ openPalette(); }
+    });
+
+    top.addButton({
+      id:"theme",
+      text: tr(i18n,"ui.topbar.theme","Theme"),
+      title: tr(i18n,"ui.topbar.theme.toggle","Toggle Theme"),
+      ariaLabel: tr(i18n,"ui.topbar.theme.toggle","Toggle Theme"),
+      order:30,
+      onClick:function(){ var th=ctx.require("UI.Theme"); if(th&&th.toggle) th.toggle(); }
+    });
+
+    top.addButton({
+      id:"health",
+      text: tr(i18n,"ui.topbar.health","Health"),
+      title: tr(i18n,"ui.topbar.health","Health"),
+      ariaLabel: tr(i18n,"ui.topbar.health","Health"),
+      order:40,
+      onClick:function(){
+        var hm = ctx.require("UI.HealthModal");
+        if (hm && hm.open) { hm.open(); return; }
+        try{
+          var list = (ctx.health && ctx.health.run ? ctx.health.run() : []);
+          var bad = list.filter(function(x){ return !x.ok; });
+          alert(bad.length ? ("Issues: "+bad.length) : "Health OK");
+        }catch(e){ alert("Health error: "+e.message); }
+      }
+    });
+
+    top.addButton({
+      id:"import",
+      text: tr(i18n,"ui.topbar.import","Import JSON"),
+      title: tr(i18n,"ui.topbar.import","Import JSON"),
+      ariaLabel: tr(i18n,"ui.topbar.import","Import JSON"),
+      order:50,
+      onClick:function(){ var imp = ctx.require("Build.Import"); if (imp && imp.open) imp.open(); else alert("Import not ready"); }
+    });
+    top.addButton({
+      id:"export",
+      text: tr(i18n,"ui.topbar.export","Export JSON"),
+      title: tr(i18n,"ui.topbar.export","Export JSON"),
+      ariaLabel: tr(i18n,"ui.topbar.export","Export JSON"),
+      order:60,
+      onClick:function(){ var ser = ctx.require("Build.Serializer"); if(ser) ser.exportJSON(); else alert("Serializer not ready"); }
+    });
+
+    top.addButton({
+      id:"rebuild",
+      text: tr(i18n,"ui.topbar.rebuild","Rebuild & Download"),
+      title: tr(i18n,"ui.topbar.rebuild","Rebuild & Download"),
+      ariaLabel: tr(i18n,"ui.topbar.rebuild","Rebuild & Download"),
+      order:70, primary:true,
+      onClick:function(){
+        var conf = ctx.require("UI.BuildConfig");
+        if (conf && conf.open){ conf.open(); return; }
+        var ser = ctx.require("Build.Serializer");
+        var toast = ctx.require("UI.Toast");
+        if (!ser) { alert("Serializer not ready"); return; }
+        try {
+          var src = ser.extract(); var html = ser.generate(src); ser.download(undefined, html);
+          if (toast && toast.success) toast.success("Rebuilt & downloaded");
+        } catch(e){
+          if (toast && toast.error) toast.error("Rebuild error: "+e.message);
+          else alert("Rebuild error: "+e.message);
+        }
+      }
+    });
+  }
+
+  function openPalette(){
+    var pal = ctx.require("UI.CommandPalette"); if (!pal) return;
+    var i18n = ctx.require("Core.I18n");
+    var base = [
+      { id:"new",    title: tr(i18n,"ui.cmd.new","New Module"),     group:"Modules", action:function(){ var m=ctx.require("UI.NewModule"); if(m&&m.open) m.open(); } },
+      { id:"import", title: tr(i18n,"ui.cmd.import","Import JSON"), group:"Build",   action:function(){ var imp=ctx.require("Build.Import"); if(imp&&imp.open) imp.open(); } },
+      { id:"export", title: tr(i18n,"ui.cmd.export","Export JSON"), group:"Build",   action:function(){ var ser=ctx.require("Build.Serializer"); if(ser&&ser.exportJSON) ser.exportJSON(); } },
+      { id:"patch",  title: tr(i18n,"ui.cmd.patch","Apply Patch"),  group:"Build",   action:function(){ var p=ctx.require("Build.Patcher"); if(p&&p.open) p.open(); } },
+      { id:"build",  title: tr(i18n,"ui.cmd.build","Build…"),       group:"Build",   action:function(){ var b=ctx.require("UI.BuildConfig"); if(b&&b.open) b.open(); else alert("Build UI not ready"); } },
+      { id:"health", title: tr(i18n,"ui.cmd.health","Run Health"),  group:"Build",   action:function(){
+        var hm=ctx.require("UI.HealthModal");
+        if(hm&&hm.open) hm.open(); else { var list=(ctx.health&&ctx.health.run?ctx.health.run():[]); alert(list.filter(function(x){return !x.ok;}).length?"Issues":"OK"); }
+      } },
+      { id:"theme",  title: tr(i18n,"ui.cmd.theme","Toggle Theme"), group:"UI",      action:function(){ var th=ctx.require("UI.Theme"); if(th&&th.toggle) th.toggle(); } },
+      { id:"save",   title: tr(i18n,"ui.cmd.save","Save"),          group:"Editor",  action:function(){ var sh=ctx.require("UI.Shell"); if(sh&&sh.saveCurrent) sh.saveCurrent(); } }
+    ];
+    var mods = (ctx.modules && ctx.modules.list ? ctx.modules.list() : []).map(function(d){
+      return { id:"go."+d.name, title:"Go to: "+d.name, group:d.type, action:function(){ if(ctx.bus&&ctx.bus.emit) ctx.bus.emit("ui:navigate", d.name); } };
+    });
+    pal.setCommands(base.concat(mods));
+    pal.open();
+  }
+
+  function wire(){
+    var top = ctx.require("UI.Topbar"); if (top && top.mount) top.mount();
+
+    var ver = document.getElementById("loom-ver");
+    if (ver){
+      var bver=(ctx.meta && ctx.meta.protected && ctx.meta.protected.bootloaderVersion)||"";
+      var prof=(ctx.meta && ctx.meta.protected && ctx.meta.protected.runProfile)||"ide";
+      ver.textContent = "v" + ((ctx.meta && ctx.meta.version) || "") + (bver?(" • boot "+bver):"") + (" • "+prof);
+    }
+
+    renderTopbar();
+
+    document.addEventListener("keydown", function(e){
+      var isMac = navigator.platform.toUpperCase().indexOf('MAC')>=0;
+      if ((isMac && e.metaKey && e.key.toLowerCase()==="k") || (!isMac && e.ctrlKey && e.key.toLowerCase()==="k")){
+        e.preventDefault(); openPalette();
+      }
+    });
+
+    var toast = ctx.require("UI.Toast"); if (toast && toast.mount) toast.mount();
+    var theme = ctx.require("UI.Theme"); if (theme && theme.mount) theme.mount();
+    var layout = ctx.require("UI.Layout"); if (layout && layout.mount) layout.mount();
+
+    var sw = ctx.require("UI.AppSwitcher"); if (sw && sw.mount) sw.mount();
+    var lsw = ctx.require("UI.LanguageSwitcher"); if (lsw && lsw.mount) lsw.mount();
+    var bp = ctx.require("UI.Blueprint"); if (bp && bp.mount) bp.mount();
+
+    if (!bound && ctx.bus && ctx.bus.on){
+      bound = true;
+      ctx.bus.on("i18n:lang", function(){ try{ renderTopbar(); }catch(_){ } });
+    }
+  }
+
+  return { wire: wire };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.AppSwitcher" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.AppSwitcher","type":"ui","version":"2.10.0","dependsOn":["UI.Topbar","Core.Store","Core.Bus","App.Host"],"exports":["mount","unmount"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"mount":{"args":[],"returns":{"type":"void"}},"unmount":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  "use strict";
+
+  var BTN_ID = "toggle-app";
+  var STORE_KEY = "app:switcher:last";
+  var active = false;
+  var last = null;
+
+  function getAppNames(){
+    var out = [];
+    try{
+      var list = (ctx.modules && ctx.modules.list) ? ctx.modules.list() : [];
+      for (var i=0;i<list.length;i++){
+        var m = list[i];
+        if (m && m.type === "app" && m.name !== "App.Host" && m.name !== "App.Welcome"){
+          out.push(m.name);
+        }
+      }
+    }catch(_){}
+    return out;
+  }
+
+  function setLast(name){
+    try{ if (ctx.store && ctx.store.set) ctx.store.set(STORE_KEY, name || null); }catch(_){}
+  }
+  function getLast(){
+    var list = getAppNames();
+    try{
+      var v = (ctx.store && ctx.store.get) ? ctx.store.get(STORE_KEY, null) : null;
+      if (v && list.indexOf(v) >= 0) return v;
+    }catch(_){}
+    return list.length ? list[0] : null;
+  }
+
+  function ensureButton(){
+    var top = ctx.require("UI.Topbar");
+    if (!top || !top.mount) return;
+    top.mount();
+
+    var list = getAppNames();
+    if (!list.length){
+      try{ top.removeButton(BTN_ID); }catch(_){}
+      return;
+    }
+    top.addButton({
+      id: BTN_ID,
+      text: active ? "IDE" : "App Mode",
+      title: "App Mode",
+      ariaLabel: "App Mode",
+      order: 80,
+      primary: active,
+      onClick: toggle
+    });
+  }
+
+  function mountApp(name){
+    var host = ctx.require("App.Host");
+    if (host && host.mount) host.mount();
+    try{ document.body.classList.add("show-app"); }catch(_){}
+
+    var mod = ctx.require(name);
+    if (mod && typeof mod.mount === "function"){
+      mod.mount();
+      active = true;
+      last = name;
+      setLast(name);
+      if (ctx.bus && ctx.bus.emit) ctx.bus.emit("app:shown", { name: name });
+    } else if (mod && typeof mod.init === "function"){
+      mod.init();
+      active = true;
+      last = name;
+      setLast(name);
+      if (ctx.bus && ctx.bus.emit) ctx.bus.emit("app:shown", { name: name });
+    }
+  }
+
+  function unmountApp(){
+    if (last){
+      try{
+        var mod = ctx.require(last);
+        if (mod && typeof mod.unmount === "function") mod.unmount();
+      }catch(_){}
+    }
+    try{ document.body.classList.remove("show-app"); }catch(_){}
+    active = false;
+    if (ctx.bus && ctx.bus.emit) ctx.bus.emit("app:hidden", { name: last });
+  }
+
+  function toggle(){
+    if (active){
+      unmountApp();
+    } else {
+      var name = getLast();
+      if (name) mountApp(name);
+    }
+    ensureButton();
+  }
+
+  function onModulesChanged(){
+    var list = getAppNames();
+    if (active && last && list.indexOf(last) < 0){
+      unmountApp();
+    }
+    setTimeout(ensureButton, 0);
+  }
+
+  function mount(){
+    setTimeout(ensureButton, 0);
+    if (ctx.bus && ctx.bus.on){
+      ctx.bus.on("modules:add", onModulesChanged);
+      ctx.bus.on("modules:remove", onModulesChanged);
+    }
+  }
+
+  function unmount(){
+    var top = ctx.require("UI.Topbar");
+    if (top && top.removeButton){
+      try{ top.removeButton(BTN_ID); }catch(_){}
+    }
+    if (ctx.bus && ctx.bus.off){
+      ctx.bus.off("modules:add", onModulesChanged);
+      ctx.bus.off("modules:remove", onModulesChanged);
+    }
+  }
+
+  return { mount: mount, unmount: unmount };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="App.Host" -->
+<script type="application/json" data-role="manifest">
+{"name":"App.Host","type":"app","version":"2.10.0","dependsOn":[],"exports":["mount","unmount","toggleDev"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"mount":{"args":[],"returns":{"type":"void"}},"unmount":{"args":[],"returns":{"type":"void"}},"toggleDev":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  var ROOT_ID="app-root";
+
+  function ensureRoot(){
+    var r=document.getElementById(ROOT_ID);
+    if(!r){
+      r=document.createElement("div");
+      r.id=ROOT_ID;
+      document.body.appendChild(r);
+    }
+    return r;
+  }
+
+  function mount(){
+    ensureRoot();
+    if(ctx.log && ctx.log.info) ctx.log.info("App host mounted");
+  }
+
+  function unmount(){
+    var r=document.getElementById(ROOT_ID); if(r) r.innerHTML="";
+    document.body.classList.remove("show-app");
+  }
+
+  function toggleDev(){ document.body.classList.toggle("show-app"); }
+
+  return { mount: mount, unmount: unmount, toggleDev: toggleDev };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="App.Welcome" -->
+<script type="application/json" data-role="manifest">
+{"name":"App.Welcome","type":"app","version":"2.10.0","dependsOn":["App.Host","UI.Toast"],"exports":["init"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"init":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  return {
+    init: function(){
+      if (ctx.log && ctx.log.info) ctx.log.info("Welcome");
+      if (ctx.bus && ctx.bus.emit) ctx.bus.emit("app:welcome",{t:Date.now()});
+      var host = ctx.require("App.Host"); if (host && host.mount) host.mount();
+      var toast = ctx.require("UI.Toast"); if (toast && toast.success) toast.success("Loom ready");
+    }
+  };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="Build.Patcher" -->
+<script type="application/json" data-role="manifest">
+{"name":"Build.Patcher","type":"build","version":"2.10.6","dependsOn":["UI.Modal","Core.Logger","Core.Store","Build.Serializer","UI.Toast"],"exports":["open","apply","applyText","dryRun","validate"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"open":{"args":[],"returns":{"type":"void"}},"apply":{"args":[{"type":"object"},{"type":"object","optional":true}],"returns":{"type":"object"}},"applyText":{"args":[{"type":"string"},{"type":"object","optional":true}],"returns":{"type":"object"}},"dryRun":{"args":[{"type":"object"}],"returns":{"type":"object"}},"validate":{"args":[{"type":"object"}],"returns":{"type":"object"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  "use strict";
+
+  var KEY_APPLIED = "patch:applied";
+
+  function safeGet(obj, path, def){
+    try{
+      var seg = String(path||"").split("."), cur=obj;
+      for(var i=0;i<seg.length;i++){ if(!cur) return def; cur=cur[seg[i]]; }
+      return (typeof cur==="undefined")?def:cur;
+    }catch(_){ return def; }
+  }
+
+  function getApplied(){
+    try{ return (ctx.store && ctx.store.get ? (ctx.store.get(KEY_APPLIED, [])||[]) : []); }
+    catch(_){ return []; }
+  }
+  function setApplied(arr){
+    try{
+      var uniq = Array.from(new Set(arr||[]));
+      if(ctx.store && ctx.store.set) ctx.store.set(KEY_APPLIED, uniq);
+    }catch(_){}
+  }
+  function clone(obj){ return JSON.parse(JSON.stringify(obj)); }
+
+  function isIdx(s){ return s==="-" || /^\d+$/.test(String(s)); }
+
+  function jsonPatchApply(obj, patch){
+    var target = obj;
+    for (var i=0;i<(patch||[]).length;i++){
+      var op = patch[i];
+      var p = String(op.path||"");
+      var segs = p.split("/").slice(1).map(function(s){ return s.replace(/~1/g,"/").replace(/~0/g,"~"); });
+      var parent = target;
+      for (var j=0;j<segs.length-1;j++){
+        var s = segs[j];
+        if(!(s in parent)){
+          if(op.op==="add"){ parent[s] = isIdx(segs[j+1]) ? [] : {}; }
+          else { throw new Error("Path not found: "+p); }
+        }
+        parent = parent[s];
+        if (typeof parent!=="object" || parent===null) throw new Error("Path not object: "+p);
+      }
+      var key = segs[segs.length-1];
+      if (op.op==="add"){
+        if (Array.isArray(parent)){
+          var idx = key==="-" ? parent.length : parseInt(key,10);
+          if (isNaN(idx)) throw new Error("Array index invalid at "+p);
+          parent.splice(idx,0,op.value);
+        } else { parent[key]=op.value; }
+      } else if (op.op==="replace"){
+        if (Array.isArray(parent)){
+          var idx2 = parseInt(key,10);
+          if (isNaN(idx2) || idx2<0 || idx2>=parent.length) throw new Error("Index OOB "+p);
+          parent[idx2]=op.value;
+        } else { parent[key]=op.value; }
+      } else if (op.op==="remove"){
+        if (Array.isArray(parent)){
+          var idx3 = parseInt(key,10);
+          if (isNaN(idx3) || idx3<0 || idx3>=parent.length) throw new Error("Index OOB "+p);
+          parent.splice(idx3,1);
+        } else { delete parent[key]; }
+      } else {
+        throw new Error("Unsupported op: "+op.op);
+      }
+    }
+    return target;
+  }
+
+  function textReplace(src, needle, repl, count, isRegex, flags){
+    var s = String(src||"");
+    if (typeof needle==="undefined" || needle===null) return { text:s, replaced:0 };
+    var times = 0;
+    if (isRegex){
+      var fl = (typeof flags === "string" && flags) ? flags : "g";
+      var re;
+      try{ re = new RegExp(needle, fl); }catch(e){ throw new Error("Invalid regex: "+(e && e.message ? e.message : e)); }
+      if (!count || count<=0){
+        var out = s.replace(re, function(){ times++; return repl; });
+        return { text: out, replaced: times };
+      } else {
+        var out2=""; var last=0; var m;
+        while(times < count && (m = re.exec(s))){
+          out2 += s.slice(last, m.index) + repl;
+          last = m.index + m[0].length;
+          times++;
+          if (!re.global) break;
+        }
+        out2 += s.slice(last);
+        return { text: out2, replaced: times };
+      }
+    }
+    var nlen = String(needle).length;
+    if (!nlen) return { text:s, replaced:0 };
+    if (!count || count<=0){ count = Infinity; }
+    var idx=0, out3="";
+    while(idx < s.length){
+      var pos = s.indexOf(needle, idx);
+      if (pos<0 || times>=count){ out3 += s.slice(idx); break; }
+      out3 += s.slice(idx, pos) + repl;
+      idx = pos + nlen; times++;
+    }
+    return { text: out3, replaced: times };
+  }
+
+  function getBootEl(){
+    var id = (ctx.meta && ctx.meta.protected && ctx.meta.protected.bootloaderId) || "LOOM_BOOT";
+    return document.getElementById(id);
+  }
+  function getCSS(){ var el=document.getElementById("LOOM_CSS"); return el?el.textContent:""; }
+  function setCSS(css){ var el=document.getElementById("LOOM_CSS"); if(el) el.textContent = css; }
+  function getMeta(){ try{ var el=document.getElementById("LOOM_META"); return el?JSON.parse(el.textContent||"{}"):{}; }catch(_){ return {}; } }
+  function setMeta(m){
+    var el=document.getElementById("LOOM_META"); if(el) el.textContent = JSON.stringify(m);
+    try{
+      var keys=Object.keys(ctx.meta); for (var i=0;i<keys.length;i++) delete ctx.meta[keys[i]];
+      Object.assign(ctx.meta, m||{});
+      if (m && m.name){ document.title = m.name; }
+    }catch(_){}
+  }
+  function getGuide(){ try{ var el=document.getElementById("LOOM_GUIDE"); return el?JSON.parse(el.textContent||"{}"):{}; }catch(_){ return {}; } }
+  function setGuide(g){ var el=document.getElementById("LOOM_GUIDE"); if(el) el.textContent = JSON.stringify(g||{}); }
+
+  function validate(patch){
+    if (!patch || typeof patch!=="object") return { ok:false, error:"Patch is not object" };
+    if (patch.$schema!=="loom.patch/1") return { ok:false, error:"Unsupported $schema (need loom.patch/1)" };
+    if (!Array.isArray(patch.changes) || !patch.changes.length) return { ok:false, error:"No changes" };
+    return { ok:true };
+  }
+
+  function checkGuards(patch){
+    var g = patch.guards || {};
+    var errs = [];
+    if (g.appVersion){
+      var v = String(safeGet(ctx, "meta.version", ""));
+      if (v !== String(g.appVersion)) errs.push("appVersion mismatch");
+    }
+    if (g.bootloaderVersion){
+      var bootEl = getBootEl();
+      var attr = bootEl && bootEl.getAttribute("data-version");
+      var metaBoot = String(safeGet(ctx, "meta.protected.bootloaderVersion", ""));
+      if (String(attr)!==String(g.bootloaderVersion) || metaBoot!==String(g.bootloaderVersion)){
+        errs.push("bootloaderVersion mismatch");
+      }
+    }
+    return errs;
+  }
+
+  function applyChange(ch){
+    var target = ch.target, method = ch.method;
+    var res = { ok:true, detail:"" };
+    try{
+      if (typeof target==="string"){
+        if (target==="css"){
+          if (method==="append"){
+            setCSS(getCSS()+String(ch.value||"")); res.detail="css appended";
+          } else if (method==="text-replace"){
+            if (!ch.regex && String(ch.needle||"")==="") throw new Error("empty needle");
+            var r=textReplace(getCSS(), ch.needle, ch.replace, ch.count, ch.regex, ch.flags);
+            setCSS(r.text); res.detail="css replaced:"+r.replaced;
+          } else { throw new Error("Unsupported css method"); }
+        } else if (target==="boot"){
+          var boot = getBootEl(); if(!boot) throw new Error("Boot not found");
+          if (method==="text-replace"){
+            if (!ch.regex && String(ch.needle||"")==="") throw new Error("empty needle");
+            var t=boot.textContent||"";
+            var r2=textReplace(t, ch.needle, ch.replace, ch.count, ch.regex, ch.flags);
+            boot.textContent=r2.text; res.detail="boot replaced:"+r2.replaced;
+          } else if (method==="attr-set"){
+            if (Array.isArray(ch.allowedAttrs) && ch.allowedAttrs.length && ch.allowedAttrs.indexOf(ch.attr)<0){
+              throw new Error("attr not allowed: "+String(ch.attr));
+            }
+            boot.setAttribute(ch.attr, ch.value); res.detail="boot attr set";
+          } else { throw new Error("Unsupported boot method"); }
+        } else if (target==="meta"){
+          if (method!=="json-patch") throw new Error("meta supports json-patch only");
+          var m=getMeta(); var mm=jsonPatchApply(clone(m), ch.patch||[]); setMeta(mm); res.detail="meta patched";
+        } else if (target==="guide"){
+          if (method!=="json-patch") throw new Error("guide supports json-patch only");
+          var g=getGuide(); var gg=jsonPatchApply(clone(g), ch.patch||[]); setGuide(gg); res.detail="guide patched";
+        } else {
+          throw new Error("Unknown target: "+target);
+        }
+      } else if (target && target.module){
+        if (method==="module-add"){
+          var u = ch.def;
+          if (!u || !u.manifest || !u.manifest.name) throw new Error("def.manifest.name required");
+          if (ctx.modules.exists(u.manifest.name)) throw new Error("Module exists: "+u.manifest.name);
+          ctx.modules.add(u); res.detail="module added";
+        } else if (method==="module-remove"){
+          var ok = ctx.modules.remove(target.module);
+          if (!ok) throw new Error("Module not found: "+target.module);
+          res.detail="module removed";
+        } else if (method==="module-rename"){
+          var def0 = ctx.modules.getDef(target.module);
+          if (!def0) throw new Error("Module not found: "+target.module);
+          var newName = ch.newName; if(!newName) throw new Error("newName required");
+          if (ctx.modules.exists(newName)) throw new Error("Module exists: "+newName);
+          ctx.modules.add({ manifest: Object.assign({}, def0.manifest, { name:newName }), contract: def0.contract, code: def0.code });
+          ctx.modules.remove(def0.manifest.name);
+          var upd=0;
+          if (ch.cascadeDependsOn===true){
+            try{
+              var list = ctx.modules.list() || [];
+              for (var i=0;i<list.length;i++){
+                var dname = list[i].name;
+                if (dname === newName) continue;
+                var d = ctx.modules.getDef(dname);
+                var deps = (d && d.manifest && Array.isArray(d.manifest.dependsOn)) ? d.manifest.dependsOn.slice() : [];
+                var changed=false;
+                for (var j=0;j<deps.length;j++){ if (deps[j]===target.module){ deps[j]=newName; changed=true; } }
+                if (changed){
+                  d.manifest.dependsOn = deps;
+                  ctx.modules.setDef(dname, d);
+                  upd++;
+                }
+              }
+            }catch(_){}
+          }
+          res.detail="module renamed:"+newName+(ch.cascadeDependsOn===true?("; dependsOn updated:"+upd):"");
+        } else if (method==="json-patch"){
+          var def = ctx.modules.getDef(target.module); if(!def) throw new Error("Module not found: "+target.module);
+          if (target.role==="manifest"){
+            def.manifest = jsonPatchApply(clone(def.manifest||{}), ch.patch||[]);
+          } else if (target.role==="contract"){
+            def.contract = jsonPatchApply(clone(def.contract||{}), ch.patch||[]);
+          } else {
+            throw new Error("json-patch supports manifest/contract");
+          }
+          ctx.modules.setDef(target.module, def); res.detail="module json-patched";
+        } else if (method==="text-replace"){
+          var def2 = ctx.modules.getDef(target.module); if(!def2) throw new Error("Module not found: "+target.module);
+          if (target.role!=="code") throw new Error("text-replace supports code");
+          if (!ch.regex && String(ch.needle||"")==="") throw new Error("empty needle");
+          var r3=textReplace(def2.code||"", ch.needle, ch.replace, ch.count, ch.regex, ch.flags);
+          def2.code=r3.text; ctx.modules.setDef(target.module, def2); res.detail="code replaced:"+r3.replaced;
+        } else {
+          throw new Error("Unsupported module method");
+        }
+      } else {
+        throw new Error("Invalid target");
+      }
+    } catch(e){
+      res.ok=false; res.detail=String(e && e.message ? e.message : e);
+    }
+    return res;
+  }
+
+  function dryRun(patch){
+    var v=validate(patch); if(!v.ok) return { ok:false, error:v.error };
+    var gs=checkGuards(patch); if(gs.length) return { ok:false, error:gs.join("; ") };
+    var changes=(patch.changes||[]).map(function(ch){
+      var out={ ok:true, detail:"ok" };
+      try{
+        if (typeof ch.target==="string"){
+          if (ch.target==="css" && ch.method==="text-replace"){
+            if (!ch.regex && String(ch.needle||"")===""){ out.ok=false; out.detail="empty needle"; }
+            else {
+              try{
+                var css=getCSS();
+                if (ch.regex){
+                  var fl = (typeof ch.flags === "string" && ch.flags) ? ch.flags : "g";
+                  var cnt = ((css.match(new RegExp(ch.needle, fl))||[]).length);
+                  out.detail="css matches:"+cnt;
+                } else {
+                  var cnt2 = (css.split(ch.needle).length-1);
+                  out.detail="css matches:"+cnt2;
+                }
+              }catch(e){ out.ok=false; out.detail="Invalid regex: "+(e && e.message ? e.message : e); }
+            }
+          } else if (ch.target==="boot" && ch.method==="text-replace"){
+            var boot=getBootEl(); var t=boot?boot.textContent:"";
+            if (!ch.regex && String(ch.needle||"")===""){ out.ok=false; out.detail="empty needle"; }
+            else {
+              try{
+                if (ch.regex){
+                  var flb = (typeof ch.flags === "string" && ch.flags) ? ch.flags : "g";
+                  var c3 = ((t.match(new RegExp(ch.needle, flb))||[]).length);
+                  out.detail=(boot?"boot matches:":"boot missing, matches:")+c3; if(!boot) out.ok=false;
+                } else {
+                  var c4 = (t.split(ch.needle).length-1);
+                  out.detail=(boot?"boot matches:":"boot missing, matches:")+c4; if(!boot) out.ok=false;
+                }
+              }catch(e2){ out.ok=false; out.detail="Invalid regex: "+(e2 && e2.message ? e2.message : e2); }
+            }
+          } else if ((ch.target==="meta"||ch.target==="guide") && ch.method==="json-patch"){
+            var src = ch.target==="meta" ? getMeta() : getGuide();
+            jsonPatchApply(clone(src), ch.patch||[]); out.detail=ch.target+" patch OK";
+          } else {
+            out.detail="ok";
+          }
+        } else if (ch.target && ch.target.module){
+          var exists = ctx.modules.exists(ch.target.module);
+          if (ch.method==="module-add"){ out.detail="ok"; }
+          else if (!exists){ out.ok=false; out.detail="module not found"; }
+          else out.detail="ok";
+        }
+      }catch(e){ out.ok=false; out.detail=String(e.message||e); }
+      return out;
+    });
+    return { ok:changes.every(function(x){return x.ok;}), changes:changes };
+  }
+
+  function apply(patch, opts){
+    opts = opts || {};
+    var v=validate(patch); if(!v.ok) return { ok:false, error:v.error };
+    var gs=checkGuards(patch); if(gs.length) return { ok:false, error:gs.join("; ") };
+
+    if (patch.allowBootPatch!==true){
+      var triesBoot = (patch.changes||[]).some(function(ch){ return ch.target==="boot"; });
+      if (triesBoot) return { ok:false, error:"Bootloader patch requires allowBootPatch:true" };
+    }
+
+    var id=patch.id;
+    var ids=getApplied();
+    if (id && !opts.force && ids.indexOf(id)>=0 && patch.allowReapply!==true) return { ok:false, error:"Patch already applied: "+id };
+
+    var results=[];
+    for (var i=0;i<(patch.changes||[]).length;i++){
+      var r=applyChange(patch.changes[i]);
+      results.push(r);
+      if(!r.ok){
+        return { ok:false, index:i, error:r.detail, results:results };
+      }
+    }
+
+    if (patch.post && patch.post.runHealth && ctx.health && ctx.health.run){
+      try{
+        var H=ctx.health.run();
+        var bad=H.filter(function(x){return !x.ok;}).length;
+        results.push({ ok: bad===0, detail:"health "+(bad?"issues:"+bad:"ok") });
+      }catch(e){ results.push({ ok:false, detail:"health error "+(e && e.message ? e.message : e) }); }
+    }
+
+    if (patch.post && patch.post.rebuild){
+      var ser = ctx.require("Build.Serializer");
+      if (ser){
+        try{
+          var src=ser.extract(); var html=ser.generate(src); ser.download(undefined, html);
+          results.push({ok:true, detail:"rebuilt"});
+        } catch(e){
+          results.push({ok:false, detail:"rebuild error "+(e && e.message ? e.message : e)});
+        }
+      }
+    }
+
+    if (id){ ids.push(id); setApplied(ids); }
+
+    return { ok:true, results:results };
+  }
+
+  function applyText(text, opts){
+    var p;
+    try{ p=JSON.parse(String(text||"{}")); }
+    catch(e){ return { ok:false, error:"JSON parse error: "+(e && e.message ? e.message : e) }; }
+    return apply(p, opts||{});
+  }
+
+  function open(){
+    var modal=ctx.require("UI.Modal"); if(!modal){ alert("Modal not ready"); return; }
+    var body=document.createElement("div");
+    var ta=document.createElement("textarea"); ta.className="code ta"; ta.placeholder='{"$schema":"loom.patch/1","id":"...","changes":[...]}';
+    var note=document.createElement("div"); note.className="note"; note.style.marginTop="8px";
+    body.appendChild(ta); body.appendChild(note);
+    function msg(t,ok){ note.textContent=t; note.style.color = ok ? "var(--ok)" : "var(--err)"; }
+    modal.open({
+      title:"Apply Patch",
+      body:body,
+      buttons:[
+        { text:"Dry Run", onClick:function(){
+          var r;
+          try{ var p=JSON.parse(ta.value||"{}"); r=dryRun(p); }
+          catch(e){ msg("Parse error: "+(e && e.message ? e.message : e), false); return; }
+          msg(r.ok?("Dry run OK ("+(r.changes?r.changes.length:0)+" ops)") : ("Dry run failed: "+(r.error||"err")), r.ok);
+        }},
+        { text:"Apply", primary:true, onClick:function(){
+          var r2;
+          try{ var p2=JSON.parse(ta.value||"{}"); r2=apply(p2); }
+          catch(e){ msg("Parse error: "+(e && e.message ? e.message : e), false); return; }
+          var toast=ctx.require("UI.Toast");
+          if(r2.ok){ msg("Applied OK", true); if(toast&&toast.success) toast.success("Patch applied"); }
+          else { msg("Apply failed: "+(r2.error||"err"), false); if(toast&&toast.error) toast.error("Patch failed"); }
+        }},
+        { text:"Close", onClick:function(){ modal.close(); } }
+      ]
+    });
+  }
+
+  return { open: open, apply: apply, applyText: applyText, dryRun: dryRun, validate: validate };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="Build.Describe" -->
+<script type="application/json" data-role="manifest">
+{"name":"Build.Describe","type":"build","version":"2.10.5","dependsOn":["Build.Health","UI.Modal"],"exports":["collect","exportJSON","open"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"collect":{"args":[],"returns":{"type":"object"}},"exportJSON":{"args":[],"returns":{"type":"void"}},"open":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  "use strict";
+  var SCHEMA="loom.blueprint/1";
+
+  function uniq(a){ var s=new Set(); (a||[]).forEach(function(x){s.add(x);}); return Array.from(s); }
+  function scan(code, re, group){
+    var out=[], m, s=String(code||""); re.lastIndex=0;
+    while((m=re.exec(s))){
+      out.push(m[group||2]||m[2]||m[1]);
+      if (re.lastIndex===m.index) re.lastIndex++;
+    }
+    return uniq(out);
+  }
+
+  function getModules(){
+    var out=[], list = ctx.modules && ctx.modules.list ? ctx.modules.list() : [];
+    for (var i=0;i<list.length;i++){
+      var name=list[i].name, def=ctx.modules.getDef(name)||{}, man=def.manifest||{}, con=def.contract||{}, fns=[];
+      try{
+        var funs = con.functions || {};
+        for (var k in funs){
+          var fn = funs[k]||{};
+          fns.push({ name:k, args:(fn.args||[]).map(function(a){ return (a&&a.type)||"any"; }), returns:(fn.returns&&fn.returns.type)||"any" });
+        }
+      }catch(_){}
+      out.push({
+        name:man.name, type:man.type, version:man.version,
+        dependsOn:man.dependsOn||[], exports:man.exports||[],
+        contract:{ functions:fns }
+      });
+    }
+    return out;
+  }
+
+  function getSignals(){
+    var res={ emitted:{}, listened:{}, storeKeys:{} };
+    var list = ctx.modules && ctx.modules.list ? ctx.modules.list() : [];
+    for (var i=0;i<list.length;i++){
+      var name=list[i].name, def=ctx.modules.getDef(name)||{}, code=def.code||"";
+      var em = scan(code, /ctx\.bus\.emit\s*\x28\s*(['"])([^'"]+)\1/g, 2);
+      var on = scan(code, /ctx\.bus\.on\s*\x28\s*(['"])([^'"]+)\1/g, 2);
+      var keys = scan(code, /ctx\.store\.(?:get|set|remove|clear)\s*\x28\s*(['"])?([^,'")\s]+)\1?/g, 2);
+      if (em.length) res.emitted[name]=em;
+      if (on.length) res.listened[name]=on;
+      if (keys.length) res.storeKeys[name]=keys;
+    }
+    return res;
+  }
+
+  function anchors(){
+    var arr=[];
+    try{
+      var d = ctx.modules.getDef("UI.Actions");
+      var code = d && d.code || "";
+      var needle = 'var sw = ctx.require("UI.AppSwitcher"); if (sw && sw.mount) sw.mount();';
+      if (code.indexOf(needle)>=0){
+        arr.push({
+          id:"after-appswitcher-mount",
+          module:"UI.Actions", role:"code", needle:needle,
+          note:"Безопасная точка для добавления ещё одного mount вызова",
+          exampleInsert:'\n var bp = ctx.require("UI.Blueprint"); if (bp && bp.mount) bp.mount();'
+        });
+      }
+    }catch(_){}
+    return arr;
+  }
+
+  function extPoints(){
+    function has(n){ try{ return !!ctx.require(n); }catch(_){ return false; } }
+    return {
+      topbar: has("UI.Topbar"),
+      palette: has("UI.CommandPalette"),
+      modal: has("UI.Modal"),
+      toast: has("UI.Toast"),
+      layout: has("UI.Layout"),
+      theme: has("UI.Theme"),
+      host: has("App.Host"),
+      serializer: has("Build.Serializer"),
+      patcher: has("Build.Patcher"),
+      health: has("Build.Health")
+    };
+  }
+
+  function patcherOps(){
+    return ["module-add","module-remove","module-rename","json-patch","text-replace","attr-set"];
+  }
+
+  function collect(){
+    var bp = {
+      $schema: SCHEMA,
+      generatedAt: new Date().toISOString(),
+      meta: {
+        name: (ctx.meta && ctx.meta.name)||"",
+        version: (ctx.meta && ctx.meta.version)||"",
+        runProfile: (ctx.meta && ctx.meta.protected && ctx.meta.protected.runProfile)||"ide",
+        bootloaderVersion: (ctx.meta && ctx.meta.protected && ctx.meta.protected.bootloaderVersion)||""
+      },
+      guide: ctx.guide || {},
+      modules: getModules(),
+      signals: getSignals(),
+      extensionPoints: extPoints(),
+      anchors: anchors(),
+      patcher: { methods: patcherOps() }
+    };
+    try{
+      if (ctx.health && ctx.health.run){
+        var h = ctx.health.run();
+        var bad = h.filter(function(x){ return !x.ok; });
+        bp.health = { ok: bad.length===0, total: h.length, issues: bad.length };
+      }
+    }catch(_){}
+    bp.totals = {
+      modules: bp.modules.length,
+      eventsEmitted: Object.keys(bp.signals.emitted).length,
+      eventsListened: Object.keys(bp.signals.listened).length,
+      storeUsers: Object.keys(bp.signals.storeKeys).length
+    };
+    return bp;
+  }
+
+  function exportJSON(){
+    var j = JSON.stringify(collect(), null, 2);
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([j], {type:"application/json"}));
+    a.download = "loom-blueprint-"+Date.now()+".json";
+    document.body.appendChild(a); a.click(); URL.revokeObjectURL(a.href); a.remove();
+  }
+
+  function open(){
+    var modal = ctx.require("UI.Modal");
+    if (!modal){ alert("Modal not ready"); return; }
+    var bp = collect();
+    var body = document.createElement("div");
+    var p = document.createElement("div"); p.className="note";
+    p.textContent = "Blueprint: modules "+bp.totals.modules+", emitted/listened modules "+bp.totals.eventsEmitted+"/"+bp.totals.eventsListened+".";
+    var pre = document.createElement("pre"); pre.className="code";
+    pre.textContent = JSON.stringify({ meta: bp.meta, extensionPoints: bp.extensionPoints, totals: bp.totals, health: bp.health }, null, 2);
+    body.appendChild(p); body.appendChild(pre);
+    modal.open({ title:"Loom Blueprint", body: body,
+      buttons: [ { text:"Export JSON", primary:true, onClick:exportJSON }, { text:"Close", onClick:function(){ modal.close(); } } ]
+    });
+  }
+
+  return { collect: collect, exportJSON: exportJSON, open: open };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.Blueprint" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.Blueprint","type":"ui","version":"2.10.0","dependsOn":["Build.Describe","UI.CommandPalette","UI.Topbar","UI.Toast","Core.I18n","UI.Modal"],"exports":["mount","unmount"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"mount":{"args":[],"returns":{"type":"void"}},"unmount":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  "use strict";
+  var CMD_OPEN="open.blueprint", CMD_EXPORT="export.blueprint", BTN_ID="blueprint";
+  var bound=false;
+
+  function tr(key, fb){
+    var i18n = ctx.require("Core.I18n");
+    return (i18n && i18n.t) ? i18n.t(key, null, fb) : fb;
+  }
+
+  function ensurePalette(){
+    var pal = ctx.require("UI.CommandPalette");
+    if (!pal || !pal.register) return;
+    pal.register({ id: CMD_OPEN, title: "Open Blueprint", group: "Build", action: openLocal });
+    pal.register({ id: CMD_EXPORT, title: "Export Blueprint", group: "Build",
+      action: function(){ var d=ctx.require("Build.Describe"); if(d&&d.exportJSON) d.exportJSON(); } });
+  }
+
+  function openLocal(){
+    var modal = ctx.require("UI.Modal"); var d = ctx.require("Build.Describe");
+    if (!modal || !d || !d.collect){ alert("Describe not ready"); return; }
+    var bp = d.collect();
+    var m = (bp && bp.modules) ? bp.modules.length : 0;
+    var e = bp && bp.signals && bp.signals.emitted ? Object.keys(bp.signals.emitted).length : 0;
+    var l = bp && bp.signals && bp.signals.listened ? Object.keys(bp.signals.listened).length : 0;
+
+    var body = document.createElement("div");
+    var p = document.createElement("div"); p.className="note";
+    p.textContent = tr("ui.blueprint.summary","Blueprint: modules {m}, emitted/listened modules {e}/{l}.")
+      .replace("{m}", String(m)).replace("{e}", String(e)).replace("{l}", String(l));
+    var pre = document.createElement("pre"); pre.className="code";
+    pre.textContent = JSON.stringify({ meta: bp.meta, extensionPoints: bp.extensionPoints, totals: bp.totals, health: bp.health }, null, 2);
+    body.appendChild(p); body.appendChild(pre);
+
+    modal.open({
+      title: tr("ui.blueprint.title","Loom Blueprint"),
+      body: body,
+      buttons: [
+        { text: tr("ui.blueprint.btn.export","Export JSON"), primary:true, onClick:function(){ var d2=ctx.require("Build.Describe"); if(d2&&d2.exportJSON) d2.exportJSON(); } },
+        { text: tr("ui.blueprint.btn.close","Close"), onClick:function(){ modal.close(); } }
+      ]
+    });
+  }
+
+  function updateBtn(){
+    var top = ctx.require("UI.Topbar"); if (!top || !top.addButton) return;
+    try{ top.removeButton(BTN_ID); }catch(_){}
+    top.addButton({
+      id: BTN_ID,
+      text: tr("ui.topbar.blueprint", "Blueprint"),
+      title: tr("ui.topbar.blueprint.open", "Open Blueprint"),
+      order: 95,
+      onClick: openLocal
+    });
+  }
+
+  function mount(){
+    ensurePalette();
+    updateBtn();
+    if (!bound && ctx.bus && ctx.bus.on){
+      bound = true;
+      ctx.bus.on("i18n:lang", function(){ try{ updateBtn(); }catch(_){ } });
+    }
+  }
+
+  function unmount(){
+    var pal = ctx.require("UI.CommandPalette");
+    if (pal && pal.unregister){ pal.unregister(CMD_OPEN); pal.unregister(CMD_EXPORT); }
+    var top = ctx.require("UI.Topbar");
+    if (top && top.removeButton) top.removeButton(BTN_ID);
+    bound=false;
+  }
+
+  return { mount: mount, unmount: unmount };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="Core.I18n" -->
+<script type="application/json" data-role="manifest">
+{"name":"Core.I18n","type":"core","version":"2.10.0","dependsOn":["Core.Store","Core.Bus"],"exports":["mount","setLang","getLang","t","addDict","setDict","getDict","load","onChange","getMissing"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"mount":{"args":[],"returns":{"type":"void"}},"setLang":{"args":[{"type":"string"}],"returns":{"type":"void"}},"getLang":{"args":[],"returns":{"type":"string"}},"t":{"args":[{"type":"string"},{"type":"object","optional":true},{"type":"string","optional":true}],"returns":{"type":"string"}},"addDict":{"args":[{"type":"string"},{"type":"object"}],"returns":{"type":"void"}},"setDict":{"args":[{"type":"string"},{"type":"object"}],"returns":{"type":"void"}},"getDict":{"args":[{"type":"string"}],"returns":{"type":"object"}},"load":{"args":[{"type":"string"},{"type":"string"}],"returns":{"type":"promise"}},"onChange":{"args":[{"type":"function"}],"returns":{"type":"void"}},"getMissing":{"args":[],"returns":{"type":"object"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  "use strict";
+  var CUR = "en";
+  var KEY = "i18n:lang";
+  var dicts = Object.create(null);
+  var missing = Object.create(null);
+
+  function fmt(s, p){
+    var str = String(s==null ? "" : s);
+    if (!p) return str;
+    return str.replace(/\{(\w+)\}/g, function(_, k){
+      return (p[k]!==undefined && p[k]!==null) ? String(p[k]) : _;
+    });
+  }
+
+  function setLang(lang){
+    CUR = String(lang || "en");
+    try{ if (ctx.store && ctx.store.set) ctx.store.set(KEY, CUR); }catch(_){}
+    try{ if (ctx.bus && ctx.bus.emit) ctx.bus.emit("i18n:lang", { lang: CUR }); }catch(_){}
+  }
+
+  function getLang(){ return CUR; }
+
+  function setDict(lang, dict){
+    dicts[String(lang)] = Object.assign({}, dict || {});
+    try{ if (ctx.bus && ctx.bus.emit) ctx.bus.emit("i18n:dict", { lang: lang }); }catch(_){}
+  }
+
+  function addDict(lang, part){
+    var l = String(lang);
+    dicts[l] = Object.assign({}, dicts[l] || {}, part || {});
+    try{ if (ctx.bus && ctx.bus.emit) ctx.bus.emit("i18n:dict", { lang: l }); }catch(_){}
+  }
+
+  function getDict(lang){ return Object.assign({}, dicts[String(lang)] || {}); }
+
+  function t(key, params, fallback){
+    var d = dicts[CUR] || {};
+    var hasKey = key && Object.prototype.hasOwnProperty.call(d, key);
+    var val = hasKey ? d[key] : undefined;
+    if (typeof val === "undefined"){
+      if (typeof fallback !== "undefined") missing[key] = fallback;
+      else missing[key] = missing[key] || "";
+    }
+    return fmt(val != null ? val : (fallback != null ? fallback : String(key||"")), params);
+  }
+
+  async function load(lang, url){
+    var r = await fetch(String(url), { cache: "no-store" });
+    var j = await r.json();
+    setDict(lang, j && j.dict ? j.dict : j);
+  }
+
+  function onChange(fn){
+    try{
+      if (ctx.bus && ctx.bus.on){
+        ctx.bus.on("i18n:lang", fn);
+        ctx.bus.on("i18n:dict", fn);
+      }
+    }catch(_){}
+  }
+
+  function mount(){
+    try{
+      var saved = (ctx.store && ctx.store.get) ? ctx.store.get(KEY) : null;
+      if (saved) CUR = saved;
+      else {
+        var pref = (navigator.language || "en").toLowerCase().indexOf("ru") === 0 ? "ru" : "en";
+        CUR = pref;
+      }
+    }catch(_){}
+    try{ if (ctx.bus && ctx.bus.emit) ctx.bus.emit("i18n:ready", { lang: CUR }); }catch(_){}
+  }
+
+  return {
+    mount, setLang, getLang, t, addDict, setDict, getDict, load, onChange,
+    getMissing: function(){ return Object.assign({}, missing); }
+  };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_MODULE name="UI.LanguageSwitcher" -->
+<script type="application/json" data-role="manifest">
+{"name":"UI.LanguageSwitcher","type":"ui","version":"2.10.0","dependsOn":["UI.Topbar","Core.I18n"],"exports":["mount","unmount"]}
+</script>
+<script type="application/json" data-role="contract">
+{"$schema":"loom.contract/1","functions":{"mount":{"args":[],"returns":{"type":"void"}},"unmount":{"args":[],"returns":{"type":"void"}}}}
+</script>
+<script type="text/loom-module" data-role="code">
+function Module(ctx){
+  "use strict";
+  var BTN_ID = "lang";
+  var mounted = false;
+
+  function ensureDicts(){
+    var i18n = ctx.require("Core.I18n"); if(!i18n) return;
+
+    // EN
+    i18n.addDict("en",{
+      "ui.topbar.sidebar":"Sidebar",
+      "ui.topbar.command":"Command Palette",
+      "ui.topbar.theme":"Theme",
+      "ui.topbar.theme.toggle":"Toggle Theme",
+      "ui.topbar.health":"Health",
+      "ui.topbar.import":"Import JSON",
+      "ui.topbar.export":"Export JSON",
+      "ui.topbar.rebuild":"Rebuild & Download",
+      "ui.topbar.blueprint":"Blueprint",
+      "ui.topbar.blueprint.open":"Open Blueprint",
+
+      "ui.shell.modules":"Modules",
+      "ui.shell.details":"Details",
+      "ui.shell.new":"New",
+      "ui.shell.selectLeft":"Select a module on the left",
+      "ui.shell.btn.validate":"Validate",
+      "ui.shell.btn.copy":"Copy",
+      "ui.shell.btn.viewHtml":"View HTML",
+      "ui.shell.btn.save":"Save",
+      "ui.shell.btn.cancel":"Cancel",
+      "ui.shell.btn.edit":"Edit",
+      "ui.shell.btn.editing":"Editing",
+      "ui.shell.mi.open":"Open",
+      "ui.shell.mi.duplicate":"Duplicate",
+      "ui.shell.mi.delete":"Delete",
+      "ui.shell.mi.delete.confirm":"Delete ",
+      "ui.shell.status.label":"Status: ",
+      "ui.shell.status.ready":"Ready",
+      "ui.shell.status.editing":"Editing…",
+      "ui.shell.status.saved":"Saved",
+      "ui.shell.kv.name":"Name",
+      "ui.shell.kv.type":"Type",
+      "ui.shell.kv.version":"Version",
+      "ui.shell.kv.depends":"Depends",
+      "ui.shell.kv.exports":"Exports",
+      "ui.shell.confirm.leave":"There are unsaved changes. Continue without saving?",
+
+      "ui.blueprint.title":"Loom Blueprint",
+      "ui.blueprint.summary":"Blueprint: modules {m}, emitted/listened modules {e}/{l}.",
+      "ui.blueprint.btn.export":"Export JSON",
+      "ui.blueprint.btn.close":"Close",
+
+      "ui.build.title":"Build configuration",
+      "ui.build.profile":"Profile",
+      "ui.build.profile.ide":"IDE (as-is)",
+      "ui.build.profile.app":"App-only",
+      "ui.build.entry":"Entry App",
+      "ui.build.includeHost":"Include App.Host",
+      "ui.build.keepHelpers":"Keep UI helpers",
+      "ui.build.versions":"Versions",
+      "ui.build.appVersion":"App version",
+      "ui.build.bootVersion":"Bootloader version (release-only)",
+      "ui.build.bootTouch":"Update boot attr+meta",
+      "ui.build.note.ide":"IDE mode: full page will be rebuilt.",
+      "ui.build.preflight":"Preflight issues: {list}",
+      "ui.build.noApp":"No App.* modules for App profile.",
+      "ui.build.btn.cancel":"Cancel",
+      "ui.build.btn.build":"Build & Download",
+
+      "ui.palette.placeholder":"Type a command…",
+      "ui.cmd.new":"New Module",
+      "ui.cmd.import":"Import JSON",
+      "ui.cmd.export":"Export JSON",
+      "ui.cmd.patch":"Apply Patch",
+      "ui.cmd.build":"Build…",
+      "ui.cmd.health":"Run Health",
+      "ui.cmd.theme":"Toggle Theme",
+      "ui.cmd.save":"Save"
+    });
+
+    // RU
+    i18n.addDict("ru",{
+      "ui.topbar.sidebar":"Боковая панель",
+      "ui.topbar.command":"Командная палитра",
+      "ui.topbar.theme":"Тема",
+      "ui.topbar.theme.toggle":"Переключить тему",
+      "ui.topbar.health":"Проверка",
+      "ui.topbar.import":"Импорт JSON",
+      "ui.topbar.export":"Экспорт JSON",
+      "ui.topbar.rebuild":"Пересобрать и скачать",
+      "ui.topbar.blueprint":"Чертёж",
+      "ui.topbar.blueprint.open":"Открыть чертёж",
+
+      "ui.shell.modules":"Модули",
+      "ui.shell.details":"Детали",
+      "ui.shell.new":"Новый",
+      "ui.shell.selectLeft":"Выберите модуль слева",
+      "ui.shell.btn.validate":"Проверить",
+      "ui.shell.btn.copy":"Скопировать",
+      "ui.shell.btn.viewHtml":"Посмотреть HTML",
+      "ui.shell.btn.save":"Сохранить",
+      "ui.shell.btn.cancel":"Отмена",
+      "ui.shell.btn.edit":"Редактировать",
+      "ui.shell.btn.editing":"Редактирование",
+      "ui.shell.mi.open":"Открыть",
+      "ui.shell.mi.duplicate":"Дублировать",
+      "ui.shell.mi.delete":"Удалить",
+      "ui.shell.mi.delete.confirm":"Удалить ",
+      "ui.shell.status.label":"Статус: ",
+      "ui.shell.status.ready":"Готово",
+      "ui.shell.status.editing":"Редактирование…",
+      "ui.shell.status.saved":"Сохранено",
+      "ui.shell.kv.name":"Имя",
+      "ui.shell.kv.type":"Тип",
+      "ui.shell.kv.version":"Версия",
+      "ui.shell.kv.depends":"Зависимости",
+      "ui.shell.kv.exports":"Экспорты",
+      "ui.shell.confirm.leave":"Есть несохранённые изменения. Продолжить без сохранения?",
+
+      "ui.blueprint.title":"Чертёж Loom",
+      "ui.blueprint.summary":"Чертёж: модулей {m}, событий emit/listen {e}/{l}.",
+      "ui.blueprint.btn.export":"Экспорт JSON",
+      "ui.blueprint.btn.close":"Закрыть",
+
+      "ui.build.title":"Конфигурация сборки",
+      "ui.build.profile":"Профиль",
+      "ui.build.profile.ide":"IDE (как есть)",
+      "ui.build.profile.app":"Только App",
+      "ui.build.entry":"Входное приложение",
+      "ui.build.includeHost":"Включить App.Host",
+      "ui.build.keepHelpers":"Сохранить UI‑хелперы",
+      "ui.build.versions":"Версии",
+      "ui.build.appVersion":"Версия приложения",
+      "ui.build.bootVersion":"Версия загрузчика (только в релизах)",
+      "ui.build.bootTouch":"Обновить атрибут и meta загрузчика",
+      "ui.build.note.ide":"Режим IDE: будет перестроена вся страница.",
+      "ui.build.preflight":"Предупреждения: {list}",
+      "ui.build.noApp":"Нет App.* модулей для профиля App.",
+      "ui.build.btn.cancel":"Отмена",
+      "ui.build.btn.build":"Собрать и скачать",
+
+      "ui.palette.placeholder":"Введите команду…",
+      "ui.cmd.new":"Новый модуль",
+      "ui.cmd.import":"Импорт JSON",
+      "ui.cmd.export":"Экспорт JSON",
+      "ui.cmd.patch":"Применить патч",
+      "ui.cmd.build":"Сборка…",
+      "ui.cmd.health":"Проверка",
+      "ui.cmd.theme":"Переключить тему",
+      "ui.cmd.save":"Сохранить"
+    });
+  }
+
+  function label(l){ return l==="ru" ? "RU" : "EN"; }
+
+  function updateBtn(){
+    try{
+      var top = ctx.require("UI.Topbar");
+      var i18n = ctx.require("Core.I18n");
+      if (!top || !i18n) return;
+      try{ top.removeButton(BTN_ID); }catch(_){}
+      top.addButton({
+        id: BTN_ID,
+        text: label(i18n.getLang()),
+        title: "Language",
+        ariaLabel: "Language",
+        order: 85,
+        onClick: toggle
+      });
+    }catch(_){}
+  }
+
+  function toggle(){
+    var i18n = ctx.require("Core.I18n"); if(!i18n) return;
+    var next = i18n.getLang()==="ru" ? "en" : "ru";
+    i18n.setLang(next);
+    updateBtn();
+  }
+
+  function mount(){
+    if (mounted) return; mounted = true;
+    var top = ctx.require("UI.Topbar"); var i18n = ctx.require("Core.I18n");
+    if (!top || !i18n) return;
+    if (i18n.mount) i18n.mount();
+    ensureDicts();
+    if (!i18n.getLang()){
+      var pref = (navigator.language||"en").toLowerCase().indexOf("ru")==0?"ru":"en";
+      i18n.setLang(pref);
+    }
+    updateBtn();
+    try{ if(ctx.bus && ctx.bus.on) ctx.bus.on("i18n:lang", updateBtn); }catch(_){}
+  }
+
+  function unmount(){
+    var top = ctx.require("UI.Topbar");
+    if (top && top.removeButton) top.removeButton(BTN_ID);
+    mounted = false;
+  }
+
+  return { mount: mount, unmount: unmount };
+}
+</script>
+<!-- LOOM:END_MODULE -->
+<!-- LOOM:BEGIN_BOOTLOADER -->
+<script id="LOOM_BOOT" data-version="2.5.0">
+
+
+
+
+
+
+
+
+
+
+
+(function(){
+  function parseJSONById(id, def){
+    try { var el = document.getElementById(id); return el ? JSON.parse(el.textContent || "{}") : (def||{}); }
+    catch(e){ console.error("JSON parse error", id, e); return def||{}; }
+  }
+
+  var meta = parseJSONById("LOOM_META", {});
+  var guide = parseJSONById("LOOM_GUIDE", {});
+  var order = (meta.conventions && meta.conventions.loadOrder) || ["core","build","ui","app"];
+  var runProfile = (meta && meta.protected && meta.protected.runProfile) || "ide";
+  var entryApp = (meta && meta.protected && meta.protected.entryApp) || "";
+
+  var registry = new Map();
+  var defs = [];
+
+  var stubLog = {
+    getHistory: function(){ return []; },
+    setLevel: function(){},
+    log: function(_,m,d){ console.log("[Loom]", m, d||""); },
+    info: function(m,d){ console.info("[Loom]", m, d||""); },
+    warn: function(m,d){ console.warn("[Loom]", m, d||""); },
+    error: function(m,d){ console.error("[Loom]", m, d||""); }
+  };
+  var busStub = { on:function(){}, off:function(){}, emit:function(){} };
+
+  function findBeginComment(node){
+    var p = node ? node.previousSibling : null;
+    while(p){
+      if (p.nodeType===8 && (p.nodeValue||"").indexOf("LOOM:BEGIN_MODULE")>=0) return p;
+      p = p.previousSibling;
+    }
+    return null;
+  }
+  function findEndComment(node){
+    var n = node ? node.nextSibling : null;
+    while(n){
+      if (n.nodeType===8 && (n.nodeValue||"").indexOf("LOOM:END_MODULE")>=0) return n;
+      n = n.nextSibling;
+    }
+    return null;
+  }
+
+  var ctx = {
+    meta: meta, guide: guide,
+    log: stubLog, bus: busStub, store: null,
+    health: { run: function(){ return []; }, preflight:function(){return [];} },
+    require: function(n){ var e = registry.get(n); return e ? e.exports : null; },
+    modules: {
+      list: function(){ return defs.map(function(d){ return { name: d.manifest.name, type: d.manifest.type, version: d.manifest.version, manifest: d.manifest }; }); },
+      exists: function(n){ return defs.some(function(x){ return x.manifest && x.manifest.name === n; }); },
+      hasDef: function(n){ return defs.some(function(x){ return x.manifest && x.manifest.name === n; }); },
+      existsCompiled: function(n){ return registry.has(n); },
+      getDef: function(n){
+        var d = defs.find(function(x){ return x.manifest.name === n; });
+        return d ? { manifest: d.manifest, contract: d.contract, code: d.code } : null;
+      },
+      setDef: function(n, u){
+        var d = defs.find(function(x){ return x.manifest.name === n; });
+        if (!d) return false;
+        if (u && u.manifest && u.manifest.name && u.manifest.name !== n){
+          console.warn("setDef rename rejected; use add+remove for renaming");
+          return false;
+        }
+        d.manifest = u.manifest; d.contract = u.contract; d.code = u.code;
+        d.tags.man.textContent = JSON.stringify(u.manifest);
+        d.tags.con.textContent = JSON.stringify(u.contract);
+        d.tags.code.textContent = u.code;
+        compileOne(d);
+        updateGlobals();
+        try{ ctx.bus.emit("modules:setDef", { name: n, def: u }); }catch(_){}
+        return true;
+      },
+      add: function(u){
+        var name = u && u.manifest && u.manifest.name;
+        if (!name){ console.warn("Add rejected: no manifest.name"); return false; }
+        if (defs.some(function(x){ return x.manifest && x.manifest.name === name; })){
+          console.warn("Add rejected: duplicate module", name);
+          return false;
+        }
+        var before = document.getElementById("LOOM_BOOT");
+        var frag = document.createDocumentFragment();
+        var capStart = document.createComment(' LOOM:BEGIN_MODULE name="'+name+'" ');
+        var man = document.createElement("script"); man.type="application/json"; man.setAttribute("data-role","manifest"); man.textContent = JSON.stringify(u.manifest);
+        var con = document.createElement("script"); con.type="application/json"; con.setAttribute("data-role","contract"); con.textContent = JSON.stringify(u.contract);
+        var code = document.createElement("script"); code.type="text/loom-module"; code.setAttribute("data-role","code"); code.textContent = u.code;
+        var capEnd = document.createComment(" LOOM:END_MODULE ");
+        frag.appendChild(capStart); frag.appendChild(man); frag.appendChild(con); frag.appendChild(code); frag.appendChild(capEnd);
+        before.parentNode.insertBefore(frag, before);
+        var d = { manifest: u.manifest, contract: u.contract, code: u.code, tags: { start: capStart, man: man, con: con, code: code, end: capEnd } };
+        defs.push(d);
+        compileOne(d);
+        updateGlobals();
+        try{ ctx.bus.emit("modules:add", { name: name, def: u }); }catch(_){}
+        return true;
+      },
+      remove: function(n){
+        var i = defs.findIndex(function(x){ return x.manifest.name === n; });
+        if (i < 0) return false;
+        var d = defs[i];
+        try {
+          if (d.tags.start) d.tags.start.remove();
+          if (d.tags.man) d.tags.man.remove();
+          if (d.tags.con) d.tags.con.remove();
+          if (d.tags.code) d.tags.code.remove();
+          if (d.tags.end) d.tags.end.remove();
+        } catch(e){
+          try{
+            var startC = findBeginComment(d.tags.man||{});
+            var endC = findEndComment(d.tags.code||{});
+            if (startC) startC.remove();
+            if (d.tags.man) d.tags.man.remove();
+            if (d.tags.con) d.tags.con.remove();
+            if (d.tags.code) d.tags.code.remove();
+            if (endC) endC.remove();
+          }catch(_){}
+        }
+        defs.splice(i,1); registry.delete(n); updateGlobals();
+        try{ ctx.bus.emit("modules:remove", { name: n }); }catch(_){}
+        return true;
+      }
+    }
+  };
+
+  function nextByRole(start, role){
+    var el = start.nextElementSibling;
+    while (el) {
+      if (el.tagName === "SCRIPT" && el.getAttribute("data-role") === role) return el;
+      el = el.nextElementSibling;
+    }
+    return null;
+  }
+
+  function collect(){
+    defs.length = 0;
+    var mans = Array.prototype.slice.call(document.querySelectorAll('script[type="application/json"][data-role="manifest"]'));
+    for (var i=0; i<mans.length; i++){
+      try {
+        var man = mans[i];
+        var manifest = JSON.parse(man.textContent || "{}");
+        var con = nextByRole(man, "contract");
+        var code = nextByRole(man, "code");
+        var startC = findBeginComment(man);
+        var endC = findEndComment(code);
+        defs.push({
+          manifest: manifest,
+          contract: con ? JSON.parse(con.textContent || "{}") : {},
+          code: code ? code.textContent : "function Module(ctx){ return {}; }",
+          tags: { start: startC, man: man, con: con, code: code, end: endC }
+        });
+      } catch(e) {
+        console.error("Bad capsule", e);
+      }
+    }
+  }
+
+  function compileOne(d){
+    try {
+      var factory = new Function("ctx", d.code + "\nreturn Module(ctx);");
+      var exp = factory(ctx);
+      registry.set(d.manifest.name, { def: d, exports: exp });
+      try{
+        if (d.manifest.name==="Core.Logger") ctx.log = exp || ctx.log;
+        else if (d.manifest.name==="Core.Bus") ctx.bus = exp || ctx.bus;
+        else if (d.manifest.name==="Core.Store") ctx.store = exp || ctx.store;
+        else if (d.manifest.name==="Build.Health") ctx.health = exp || ctx.health;
+      }catch(_){}
+      return true;
+    } catch(e) {
+      console.error("Compile error", d.manifest && d.manifest.name, e);
+      return false;
+    }
+  }
+
+  function topoSort(items){
+    var nameToItem = Object.create(null);
+    var indeg = Object.create(null);
+    var adj = Object.create(null);
+
+    function typeIdx(it){
+      var t = (it.manifest && it.manifest.type) || "";
+      var idx = order.indexOf(t); return idx<0?99:idx;
+    }
+
+    items.forEach(function(it){
+      var n = it.manifest.name;
+      nameToItem[n] = it; indeg[n]=0; adj[n]=[];
+    });
+    items.forEach(function(it){
+      var deps = (it.manifest && it.manifest.dependsOn) || [];
+      var n = it.manifest.name;
+      for (var i=0;i<deps.length;i++){
+        var dep = deps[i];
+        if (nameToItem[dep]){
+          indeg[n]++; adj[dep].push(n);
+        }
+      }
+    });
+
+    var queue = Object.keys(nameToItem).filter(function(n){ return indeg[n]===0; });
+    queue.sort(function(a,b){
+      var da = typeIdx(nameToItem[a]) - typeIdx(nameToItem[b]); if (da!==0) return da;
+      return a.localeCompare(b);
+    });
+
+    var out=[];
+    while(queue.length){
+      var n = queue.shift();
+      out.push(nameToItem[n]);
+      var arr = adj[n]||{};
+      for (var i=0;i<(arr.length||0);i++){
+        var m = arr[i]; indeg[m]--;
+        if (indeg[m]===0){ queue.push(m); }
+      }
+      queue.sort(function(a,b){
+        var da = typeIdx(nameToItem[a]) - typeIdx(nameToItem[b]); if (da!==0) return da;
+        return a.localeCompare(b);
+      });
+    }
+
+    if (out.length < items.length){
+      console.warn("Dependency cycle or unresolved deps, fallback ordering by type/name");
+      var rest = items.filter(function(it){ return out.indexOf(it)<0; });
+      rest.sort(function(a,b){
+        var da = typeIdx(a) - typeIdx(b); if (da!==0) return da;
+        return (a.manifest.name||"").localeCompare(b.manifest.name||"");
+      });
+      out = out.concat(rest);
+    }
+    return out;
+  }
+
+  function compileAll(){
+    var items = topoSort(defs.slice());
+    registry.clear();
+    for (var i=0;i<items.length;i++){
+      compileOne(items[i]);
+    }
+
+    var logger = registry.has("Core.Logger") && registry.get("Core.Logger").exports; if (logger) ctx.log = logger;
+    var bus = registry.has("Core.Bus") && registry.get("Core.Bus").exports; if (bus) ctx.bus = bus;
+    var store = registry.has("Core.Store") && registry.get("Core.Store").exports; if (store) ctx.store = store;
+    var health = registry.has("Build.Health") && registry.get("Build.Health").exports; if (health) ctx.health = health;
+
+    updateGlobals();
+  }
+
+  function mountIDE(){
+    var topbar = registry.has("UI.Topbar") && registry.get("UI.Topbar").exports;
+    if (topbar && topbar.mount) topbar.mount();
+
+    var shell = registry.has("UI.Shell") && registry.get("UI.Shell").exports;
+    var actions = registry.has("UI.Actions") && registry.get("UI.Actions").exports;
+    if (shell && actions) {
+      if (shell.mount) shell.mount();
+      if (actions.wire) actions.wire();
+      if (ctx.log && ctx.log.info) ctx.log.info("UI mounted");
+    } else {
+      if (actions && actions.wire) actions.wire();
+      if (!shell) console.warn("UI.Shell missing");
+    }
+  }
+
+  function mountApp(entry){
+    try{
+      var host = registry.has("App.Host") && registry.get("App.Host").exports;
+      if (host && host.mount) host.mount();
+      try{ document.body.classList.add("show-app"); }catch(_){}
+      if (entry){
+        var app = registry.has(entry) && registry.get(entry).exports;
+        if (app && typeof app.mount==="function") app.mount();
+        else if (app && typeof app.init==="function") app.init();
+        else console.warn("Entry app has no mount/init:", entry);
+      }
+    }catch(e){
+      console.error("App mount error", e);
+    }
+  }
+
+  function updateGlobals(){
+    window.Loom = window.Loom || {};
+    window.Loom.meta = ctx.meta;
+    window.Loom.guide = ctx.guide;
+    window.Loom.require = ctx.require;
+    window.Loom.modules = ctx.modules;
+    window.Loom.log = ctx.log;
+    window.Loom.bus = ctx.bus;
+    window.Loom.store = ctx.store;
+    window.Loom.health = ctx.health;
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    collect();
+    compileAll();
+    try {
+      if (runProfile==="app"){
+        mountApp(entryApp);
+      } else {
+        var w = registry.has("App.Welcome") && registry.get("App.Welcome").exports;
+        if (w && w.init) w.init();
+        mountIDE();
+      }
+    } catch(e) {
+      if (ctx.log && ctx.log.warn) ctx.log.warn("Boot init failed", String(e));
+    }
+  });
+})();
+
+
+</script>
+<!-- LOOM:END_BOOTLOADER -->
+</body>
+</html>
